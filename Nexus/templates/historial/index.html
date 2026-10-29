@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Historial{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>📜 Historial de Actividades</h1>
+    <p class="page-subtitle">
+      {{ historial|length }} registro(s) guardado(s) automáticamente
+    </p>
+  </div>
+</div>
+
+<p style="margin:-8px 0 18px;font-size:0.85rem;color:#fff;">
+  Este historial se llena solo: cada vez que registras un horario/actividad
+  o un medicamento, queda guardado aquí al instante con su fecha y residente.
+  {% if session.rol != 'Administrador' %}Solo ves lo que registraste tú de tus residentes asignados.{% endif %}
+</p>
+
+<!-- TABLA -->
+{% if historial %}
+<div class="contenedor" style="padding:24px 28px;">
+  <div class="table-responsive tabla-wrapper">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Tipo</th>
+          <th>Actividad / Medicamento</th>
+          <th>Residente</th>
+          {% if session.rol == 'Administrador' %}<th>Cuidador</th>{% endif %}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in historial %}
+        <tr>
+          <td>{{ h['fecha'] }}</td>
+          <td>{{ h['hora'] }}</td>
+          <td><span class="badge {% if h['tipo'] == 'Medicamento' %}bg-info{% else %}bg-primary{% endif %}">{{ h['tipo'] }}</span></td>
+          <td>{{ h['actividad'] }}</td>
+          <td class="nombre-residente">{{ h['residente'] }}</td>
+          {% if session.rol == 'Administrador' %}<td>{{ h['cuidador'] }}</td>{% endif %}
+          <td>
+            {% if session.rol == 'Administrador' %}
+            <a href="{{ url_for('eliminar_historial', historial_id=h['id']) }}"
+               class="btn btn-sm btn-outline-danger btn-eliminar"
+               onclick="return confirm('¿Eliminar este registro del historial?')">🗑️</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="contenedor">
+  <div class="vacio text-center py-5">
+    <p>Aún no hay registros en el historial.</p>
+    <p class="text-muted" style="font-size:0.85rem;margin-top:8px">
+      Se irán guardando automáticamente desde Horarios y Medicamentos.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

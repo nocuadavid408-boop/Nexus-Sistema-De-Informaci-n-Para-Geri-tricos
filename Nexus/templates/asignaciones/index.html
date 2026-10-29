@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Asignación de cuidadores{% endblock %}
+
+{% block head %}
+<style>
+  .asig-card { margin-bottom: 20px; }
+
+  .asig-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .asig-top .asig-info { flex: 1; min-width: 180px; }
+  .asig-top h2 { margin: 0 0 4px; font-size: 1.1rem; }
+  .asig-top p { margin: 0; font-size: 0.82rem; opacity: .7; }
+
+  .asig-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    background: rgba(61,110,245,0.18);
+  }
+
+  .asig-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .asig-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .asig-item:hover { background: rgba(61,110,245,0.08); }
+  .asig-item input { width: 18px; height: 18px; flex-shrink: 0; }
+  .asig-item small { display: block; opacity: .65; }
+
+  .asig-item.marcado { border-color: rgba(61,110,245,0.7); background: rgba(61,110,245,0.12); }
+
+  .asig-pie { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>🧑‍⚕️ Asignación de cuidadores</h1>
+    <p class="page-subtitle">
+      Marca los residentes de cada cuidador. Cada cuidador solo verá los que
+      tenga asignados.
+    </p>
+  </div>
+</div>
+
+{% if not cuidadores %}
+<div class="contenedor">
+  <div class="vacio text-center py-5">
+    <p>Todavía no hay cuidadores activos.</p>
+    <p class="text-muted" style="font-size:0.85rem;margin-top:8px">
+      Cuando alguien se registre con el rol Cuidador aparecerá aquí de una vez.
+    </p>
+  </div>
+</div>
+{% elif not residentes %}
+<div class="contenedor">
+  <div class="vacio text-center py-5">
+    <p>No hay residentes registrados para asignar.</p>
+    <a href="{{ url_for('registrar_residente') }}" class="btn-principal mt-2">
+      + Registrar residente
+    </a>
+  </div>
+</div>
+{% else %}
+
+{% for c in cuidadores %}
+{% set mios = asignados.get(c.id, []) %}
+<form method="POST"
+      action="{{ url_for('guardar_asignaciones_cuidador', personal_id=c.id) }}"
+      class="contenedor asig-card"
+      style="padding:24px 28px;">
+
+  <div class="asig-top">
+    <div class="asig-avatar">{{ c.nombre[0] | upper }}</div>
+    <div class="asig-info">
+      <h2>{{ c.nombre }}</h2>
+      <p>Turno: {{ c.turno or 'sin definir' }}</p>
+    </div>
+    <span class="med-count-badge" data-contador>{{ mios|length }} residente(s)</span>
+  </div>
+
+  <div class="asig-lista">
+    {% for r in residentes %}
+    <label class="asig-item {% if r.id in mios %}marcado{% endif %}">
+      <input type="checkbox" name="residente_ids" value="{{ r.id }}"
+             {% if r.id in mios %}checked{% endif %}>
+      <span>
+        {{ r.nombre }}
+        <small>
+          Doc. {{ r.documento }}{% if r.habitacion %} · Hab. {{ r.habitacion }}{% endif %}
+        </small>
+      </span>
+    </label>
+    {% endfor %}
+  </div>
+
+  <div class="asig-pie">
+    <button type="submit" class="btn-principal">💾 Guardar asignaciones</button>
+  </div>
+</form>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll('.asig-card').forEach(function (tarjeta) {
+    const contador = tarjeta.querySelector('[data-contador]');
+    const cajas = tarjeta.querySelectorAll('input[type=checkbox]');
+
+    function actualizar() {
+      let total = 0;
+      cajas.forEach(function (caja) {
+        if (caja.checked) total++;
+        caja.closest('.asig-item').classList.toggle('marcado', caja.checked);
+      });
+      contador.textContent = total + ' residente(s)';
+    }
+
+    cajas.forEach(function (caja) { caja.addEventListener('change', actualizar); });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+
+{% extends 'base.html' %}
+{% block title %}{% if editando %}Editar{% else %}Registrar{% endif %} Personal{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('lista_personal') }}" class="btn-volver">← Volver a Personal</a>
+    <h1 style="margin-top:10px;">
+      {% if editando %}✏️ Editar Personal{% else %}➕ Registrar Personal{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="contenedor">
+  <form method="POST"
+        action="{% if editando %}{{ url_for('editar_personal', personal_id=personal_id) }}{% else %}{{ url_for('registrar_personal') }}{% endif %}">
+
+    <div class="seccion-form">
+      <h2>👤 Datos del Cuidador</h2>
+
+      <div class="fila-inputs">
+        <div class="grupo-input">
+          <label>Nombre completo *</label>
+          <input type="text" name="nombre" class="form-control"
+                 placeholder="Ej: Carlos Pérez"
+                 value="{{ datos.get('nombre', '') }}" required>
+        </div>
+
+        <div class="grupo-input">
+          <label>Correo electrónico</label>
+          <input type="email" name="correo" class="form-control"
+                 placeholder="Ej: carlos@gmail.com"
+                 value="{{ datos.get('correo', '') }}">
+        </div>
+      </div>
+
+      <div class="fila-inputs" style="margin-top:12px;">
+        <div class="grupo-input">
+          <label>Teléfono</label>
+          <input type="tel" name="telefono" class="form-control"
+                 placeholder="Ej: 3001234567"
+                 value="{{ datos.get('telefono', '') }}">
+        </div>
+
+        <div class="grupo-input">
+          <label>Turno *</label>
+          <select name="turno" class="form-control" required>
+            <option value="">— Seleccionar turno —</option>
+            <option value="Mañana" {% if datos.get('turno') == 'Mañana' %}selected{% endif %}>🌅 Mañana</option>
+            <option value="Tarde" {% if datos.get('turno') == 'Tarde' %}selected{% endif %}>🌇 Tarde</option>
+            <option value="Noche" {% if datos.get('turno') == 'Noche' %}selected{% endif %}>🌙 Noche</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grupo-input" style="margin-top:12px;">
+        <label>Cuenta de usuario del cuidador</label>
+        <select name="usuario_id" class="form-control">
+          <option value="">— Sin cuenta vinculada —</option>
+          {% for usuario in usuarios %}
+            <option value="{{ usuario['id'] }}"
+              {% if datos.get('usuario_id')|string == usuario['id']|string %}selected{% endif %}>
+              {{ usuario['nombre'] or usuario['username'] }} ({{ usuario['username'] }})
+            </option>
+          {% endfor %}
+        </select>
+        <small>Selecciona la cuenta que utiliza este cuidador para iniciar sesión.</small>
+      </div>
+
+      <div class="grupo-input" style="margin-top:12px;">
+        <label>Estado</label>
+        <select name="activo" class="form-control">
+          <option value="1" {% if datos.get('activo', 1)|int == 1 %}selected{% endif %}>● Activo</option>
+          <option value="0" {% if datos.get('activo', 1)|int == 0 %}selected{% endif %}>● Inactivo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="acciones-form">
+      <a href="{{ url_for('lista_personal') }}" class="btn-cancelar">Cancelar</a>
+      <button type="submit" class="btn-principal">
+        {% if editando %}💾 Guardar Cambios{% else %}✅ Registrar Personal{% endif %}
+      </button>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}

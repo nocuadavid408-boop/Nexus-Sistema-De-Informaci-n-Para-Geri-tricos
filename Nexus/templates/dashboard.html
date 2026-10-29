@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Bienvenido, {{ session.nombre }} 👋</h1>
+    <p class="page-subtitle">Panel principal del Sistema Nexus — Hogar Geriátrico</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-number">{{ total_residentes }}</div>
+      <div class="stat-label">Residentes registrados</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-number">{{ total_actividades }}</div>
+      <div class="stat-label">Actividades programadas</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon">🔔</div>
+      <div class="stat-number">{{ total_notificaciones_pendientes }}</div>
+      <div class="stat-label">Notificaciones pendientes</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon">🔐</div>
+      <div class="stat-number" style="font-size:1.4rem;padding-top:10px">{{ session.rol }}</div>
+      <div class="stat-label">Tu rol en el sistema</div>
+    </div>
+  </div>
+
+  {% if session.rol == 'Administrador' %}
+  <div class="col-sm-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon">🧑‍💼</div>
+      <div class="stat-number">{{ total_usuarios }}</div>
+      <div class="stat-label">Usuarios registrados</div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<div class="accesos-rapidos">
+  <h2>Accesos rápidos</h2>
+  <div class="row g-3 mt-1">
+
+    {% if session.rol == 'Administrador' %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('registrar_residente') }}" class="action-card">
+        <span class="action-icon">➕</span>
+        <span class="action-label">Registrar residente</span>
+      </a>
+    </div>
+    {% endif %}
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_residentes') }}" class="action-card">
+        <span class="action-icon">📋</span>
+        <span class="action-label">Ver residentes</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_personal') }}" class="action-card">
+        <span class="action-icon">👨‍⚕️</span>
+        <span class="action-label">{% if session.rol == 'Administrador' %}Panel del personal{% else %}Mi panel{% endif %}</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('horarios') }}" class="action-card">
+        <span class="action-icon">📅</span>
+        <span class="action-label">Gestionar actividades</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_medicamentos') }}" class="action-card">
+        <span class="action-icon">💊</span>
+        <span class="action-label">Gestionar Medicamentos</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_familiar') }}" class="action-card">
+        <span class="action-icon">👨‍👩‍👧</span>
+        <span class="action-label">Vista familiar</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_historial') }}" class="action-card">
+        <span class="action-icon">📜</span>
+        <span class="action-label">Historial de actividades</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_notificaciones') }}" class="action-card">
+        <span class="action-icon">🔔</span>
+        <span class="action-label">Notificaciones y alertas</span>
+      </a>
+    </div>
+
+    {% if session.rol == 'Cuidador' %}
+<div class="col-6 col-md-4 col-lg-3">
+  <a href="{{ url_for('pdf_cuidador') }}" class="action-card">
+    <span class="action-icon">📄</span>
+    <span class="action-label">Generar reporte PDF</span>
+  </a>
+</div>
+{% endif %}
+
+    {% if session.rol == 'Administrador' %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('asignaciones') }}" class="action-card">
+        <span class="action-icon">🧑‍⚕️</span>
+        <span class="action-label">Asignar cuidadores</span>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('lista_usuarios') }}" class="action-card">
+        <span class="action-icon">🧑‍💼</span>
+        <span class="action-label">Gestionar usuarios</span>
+      </a>
+    </div>
+    {% endif %}
+
+    <div class="col-6 col-md-4 col-lg-3">
+  <a href="{{ url_for('perfil') }}" class="action-card">
+    <span class="action-icon">👤</span>
+    <span class="action-label">Mi perfil</span>
+  </a>
+</div>
+
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{{ url_for('logout') }}" class="action-card" style="border-color:rgba(239,68,68,0.15)">
+        <span class="action-icon">🚪</span>
+        <span class="action-label" style="color:#f87171">Cerrar sesión</span>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

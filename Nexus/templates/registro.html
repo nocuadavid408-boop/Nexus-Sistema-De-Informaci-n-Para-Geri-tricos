@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus — Crear Cuenta</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/nexus.css') }}">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-card auth-card--wide">
+
+    <div class="auth-brand">
+      <img src="{{ url_for('static', path='img/logo.png') }}" alt="Nexus" class="auth-logo">
+      <p class="auth-subtitle">Crear nueva cuenta en el sistema</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert {% if category == 'exito' %}alert-success{% elif category == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" class="auth-form" novalidate>
+
+      <div class="auth-section-label">Datos personales</div>
+
+      <div class="row g-3 mb-2">
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Nombre completo <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">👤</span>
+              <input type="text" name="nombre" class="form-control"
+                     placeholder="Ej: Juan Pérez"
+                     value="{{ datos.get('nombre', '') }}" required>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Correo electrónico</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">✉️</span>
+              <input type="email" name="correo" class="form-control"
+                     placeholder="correo@ejemplo.com"
+                     value="{{ datos.get('correo', '') }}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-section-label">Acceso al sistema</div>
+
+      <div class="row g-3 mb-2">
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Nombre de usuario <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🏷️</span>
+              <input type="text" name="username" class="form-control"
+                     placeholder="Sin espacios (ej: juan_p)"
+                     value="{{ datos.get('username', '') }}"
+                     autocomplete="username" required>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Rol en el sistema <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🎭</span>
+              <select name="rol" class="form-select">
+                <option value="Cuidador" {% if datos.get('rol','Cuidador')=='Cuidador' %}selected{% endif %}>Cuidador</option>
+                <option value="Familiar" {% if datos.get('rol')=='Familiar' %}selected{% endif %}>Familiar</option>
+              </select>
+            </div>
+            <small class="text-secondary d-block mt-1">
+              Si eliges <strong>Familiar</strong>, pide al personal del hogar que registre a tu
+              familiar usando este mismo nombre de usuario para vincular tu cuenta.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Contraseña <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" name="password" class="form-control"
+                     placeholder="Mínimo 6 caracteres"
+                     autocomplete="new-password" required>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Confirmar contraseña <span class="req">*</span></label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" name="confirmar" class="form-control"
+                     placeholder="Repite la contraseña"
+                     autocomplete="new-password" required>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 btn-login">Crear cuenta →</button>
+
+    </form>
+
+    <div class="auth-divider"><span>¿Ya tienes cuenta?</span></div>
+
+    <a href="{{ url_for('login') }}" class="btn btn-outline-secondary w-100 btn-auth-link">← Volver al inicio de sesión</a>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

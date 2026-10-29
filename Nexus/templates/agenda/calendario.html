@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Agenda — {{ residente['nombre'] }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/agenda.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>📅 Agenda de {{ residente['nombre'] }}</h1>
+    <p class="page-subtitle">Hab. {{ residente['habitacion'] or '—' }} · Toca un día para ver su itinerario</p>
+  </div>
+  {% if editable %}
+  <a href="{{ url_for('agenda_crear', residente_id=residente['id']) }}" class="btn-principal">➕ Crear medicamento / actividad</a>
+  {% endif %}
+</div>
+
+<div class="ag-layout">
+
+  <!-- CALENDARIO DEL MES -->
+  <div class="contenedor">
+    <div class="ag-cab">
+      <a class="ag-nav" href="?mes={{ mes_ant }}" aria-label="Mes anterior">‹</a>
+      <h2>{{ titulo_mes }}</h2>
+      <a class="ag-nav" href="?mes={{ hoy.strftime('%Y-%m') }}&dia={{ hoy.isoformat() }}">Hoy</a>
+      <a class="ag-nav" href="?mes={{ mes_sig }}" aria-label="Mes siguiente">›</a>
+    </div>
+
+    <div class="ag-cal" id="ag-cal">
+      {% for d in ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'] %}<div class="ag-dow">{{ d }}</div>{% endfor %}
+      {% for semana in semanas %}{% for dia in semana %}
+        {% if dia %}
+          {% set r = resumen.get(dia.isoformat()) %}
+          <button type="button" class="ag-dia {{ 'hoy' if dia == hoy }}" data-fecha="{{ dia.isoformat() }}">
+            <span class="ag-num">{{ dia.day }}</span>
+            {% if r %}
+              {% if r.hechos == r.total %}<span class="ag-pill ok">✓ {{ r.total }}</span>
+              {% elif dia < hoy %}<span class="ag-pill atras">✗ {{ r.total - r.hechos }} sin hacer</span>
+              {% else %}<span class="ag-pill pend">{{ r.hechos }}/{{ r.total }}</span>{% endif %}
+            {% endif %}
+          </button>
+        {% else %}<div class="ag-dia vacio"></div>{% endif %}
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
+
+  <!-- ITINERARIO DEL DÍA (solo lectura: lo que se crea o elimina se hace en "Crear") -->
+  <aside class="contenedor ag-itin" id="ag-itin"
+         data-residente="{{ residente['id'] }}"
+         data-abrir="{{ dia_abrir or hoy.isoformat() }}" data-hoy="{{ hoy.isoformat() }}">
+    <h3 id="ag-titulo">Selecciona un día</h3>
+    <div class="ag-progreso"><div class="ag-progreso-barra" id="ag-barra" style="width:0"></div></div>
+    <small id="ag-sub" style="color:var(--txt-muted)"></small>
+
+    <h4 class="ag-sec">💊 Medicamentos</h4>
+    <ul class="ag-ruta" id="ag-lista-med"></ul>
+
+    <h4 class="ag-sec">🏃 Actividad</h4>
+    <ul class="ag-ruta" id="ag-lista-act"></ul>
+
+    <h4 class="ag-sec">📝 Observaciones del día</h4>
+    <textarea id="ag-obs" class="nx-textarea" rows="8"
+              style="min-height:180px;width:100%;resize:vertical"
+              placeholder="Observaciones del día…" {{ '' if editable else 'readonly' }}></textarea>
+    {% if editable %}
+    <div style="margin-top:8px;display:flex;gap:10px;align-items:center">
+      <button type="button" class="btn-principal" id="ag-obs-guardar">💾 Guardar observaciones</button>
+      <small id="ag-obs-estado" style="color:var(--txt-muted)"></small>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='js/itinerario.js') }}"></script>
+<script>
+(function () {
+  const itin = document.getElementById('ag-itin');
+  const rid = itin.dataset.residente;
+  const ulMed = document.getElementById('ag-lista-med');
+  const ulAct = document.getElementById('ag-lista-act');
+  const obs = document.getElementById('ag-obs');
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  let fechaSel = null;
+
+  function titulo(f) {
+    const d = new Date(f + 'T12:00:00');
+    return `${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`;
+  }
+
+  function contadores() {
+    const tareas = [...itin.querySelectorAll('li[data-id]')];
+    const hechas = tareas.filter(t => t.classList.contains('ag-hecho')).length;
+    document.getElementById('ag-sub').textContent = tareas.length ? `${hechas} de ${tareas.length} completadas` : 'Sin tareas este día';
+    document.getElementById('ag-barra').style.width = tareas.length ? Math.floor(hechas * 100 / tareas.length) + '%' : '0';
+    return { total: tareas.length, hechos: hechas };
+  }
+
+  async function abrirDia(f) {
+    fechaSel = f;
+    document.querySelectorAll('.ag-dia.sel').forEach(x => x.classList.remove('sel'));
+    const celda = document.querySelector(`.ag-dia[data-fecha="${f}"]`);
+    if (celda) celda.classList.add('sel');
+    document.getElementById('ag-titulo').textContent = titulo(f);
+    ulMed.innerHTML = ulAct.innerHTML = '<li style="color:var(--txt-muted)">Cargando…</li>';
+    try {
+      const d = await (await fetch(`/itinerario/${rid}/dia/${f}`)).json();
+      if (!d.ok) { ulMed.innerHTML = `<li>${nxEsc(d.error)}</li>`; ulAct.innerHTML = ''; return; }
+      nxPintarListas(d.items, d.editable, ulMed, ulAct);
+      obs.value = d.observaciones || '';
+      contadores();
+    } catch (e) { ulMed.innerHTML = '<li>No se pudo cargar el día.</li>'; ulAct.innerHTML = ''; }
+  }
+
+  // Al marcar ✓/✗ se actualiza el resumen del día en el calendario.
+  document.addEventListener('itinerario:check', () => {
+    const { total, hechos } = contadores();
+    const celda = document.querySelector(`.ag-dia[data-fecha="${fechaSel}"]`);
+    if (!celda) return;
+    let pill = celda.querySelector('.ag-pill');
+    if (!pill) { pill = document.createElement('span'); celda.appendChild(pill); }
+    const pasado = fechaSel < itin.dataset.hoy;
+    if (!total) { pill.remove(); return; }
+    pill.className = 'ag-pill ' + (hechos === total ? 'ok' : pasado ? 'atras' : 'pend');
+    pill.textContent = hechos === total ? `✓ ${total}` : pasado ? `✗ ${total - hechos} sin hacer` : `${hechos}/${total}`;
+  });
+
+  const btnObs = document.getElementById('ag-obs-guardar');
+  if (btnObs) btnObs.addEventListener('click', async () => {
+    if (!fechaSel) return;
+    const fd = new FormData(); fd.append('texto', obs.value);
+    const d = await (await fetch(`/itinerario/${rid}/${fechaSel}/observaciones`, { method: 'POST', body: fd })).json();
+    const est = document.getElementById('ag-obs-estado');
+    est.textContent = d.ok ? '✓ Guardado' : (d.error || 'Error');
+    setTimeout(() => est.textContent = '', 2500);
+  });
+
+  document.getElementById('ag-cal').addEventListener('click', e => {
+    const b = e.target.closest('.ag-dia[data-fecha]');
+    if (b) abrirDia(b.dataset.fecha);
+  });
+
+  // Día inicial: el pedido por la URL o hoy (si está en este mes).
+  const abrir = itin.dataset.abrir;
+  const inicial = document.querySelector(`.ag-dia[data-fecha="${abrir}"]`)
+    ? abrir : (document.querySelector('.ag-dia[data-fecha]') || {dataset:{}}).dataset.fecha;
+  if (inicial) abrirDia(inicial);
+})();
+</script>
+{% endblock %}

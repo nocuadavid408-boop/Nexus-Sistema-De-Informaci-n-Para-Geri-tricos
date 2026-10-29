@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Actividad — {{ residente['nombre'] }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('horarios') }}" class="btn-volver">← Volver a Actividad</a>
+    <h1 style="margin-top:10px;">🏃 Actividades del residente</h1>
+    <p class="page-subtitle">{{ residente['nombre'] }} — {{ residente['habitacion'] or 'Sin habitación' }}</p>
+  </div>
+  <a href="{{ url_for('nueva_actividad', residente_id=residente['id']) }}" class="btn-principal">➕ Agregar actividad</a>
+</div>
+
+<div class="contenedor">
+  <div class="sf-tabla-header">
+    <p class="sf-tabla-titulo">📋 Actividades programadas (de hoy en adelante)</p>
+    <span class="med-count-badge">{{ actividades|length }} actividad(es)</span>
+  </div>
+
+  {% if actividades %}
+  <div class="med-lista">
+    {% for a in actividades %}
+    <div class="med-item">
+      <div class="med-item-icon">🏃</div>
+      <div class="med-item-info">
+        <p class="med-item-nombre">{{ a['nombre'] }} <small style="color:var(--txt-muted)">· {{ a['categoria'] }}</small></p>
+        <div class="med-item-meta">
+          <span class="med-badge-hora">📅 {{ a['dia'] | dias_txt }}</span>
+          {% for h in a['horas'] %}<span class="med-badge-hora">🕐 {{ h }}</span>{% endfor %}
+        </div>
+        {% if a['observaciones'] %}<p class="med-item-obs">{{ a['observaciones'] }}</p>{% endif %}
+      </div>
+      {% if session.rol == 'Administrador' %}
+      <form method="POST" action="{{ url_for('itinerario_eliminar', residente_id=residente['id']) }}"
+            onsubmit="return confirm('¿Eliminar esta actividad de los días programados?')">
+        <input type="hidden" name="ids" value="{{ a['ids_txt'] }}">
+        <input type="hidden" name="volver" value="/horarios/{{ residente['id'] }}">
+        <button type="submit" class="med-btn-eliminar" title="Eliminar">🗑️</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sf-vacio">🏃 No hay actividades programadas.</div>
+  {% endif %}
+</div>
+{% endblock %}

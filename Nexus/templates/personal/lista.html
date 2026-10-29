@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Personal{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>👨‍⚕️ Gestión de Personal</h1>
+    <p class="page-subtitle">{{ personal|length }} cuidador(es) registrado(s)</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('asignaciones') }}" class="btn-secundario">
+      🧑‍⚕️ Asignar residentes
+    </a>
+    <a href="{{ url_for('registrar_personal') }}" class="btn-principal">
+      + Registrar personal
+    </a>
+  </div>
+</div>
+
+{% if personal %}
+<div class="contenedor" style="padding: 24px 28px;">
+
+  <div class="tabla-header mb-3">
+    <input type="text" id="buscador" class="form-control buscador"
+           placeholder="🔍 Buscar personal...">
+  </div>
+
+  <div class="table-responsive tabla-wrapper">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Turno</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body">
+        {% for p in personal %}
+        <tr>
+          <td>
+            <div class="p-nombre-cell">
+              <div class="p-avatar-sm">{{ p.nombre[0] | upper }}</div>
+              <span class="nombre-residente">{{ p.nombre }}</span>
+            </div>
+          </td>
+          <td class="text-muted">{{ p.correo or '—' }}</td>
+          <td>{{ p.telefono or '—' }}</td>
+          <td>
+            <span class="turno-badge turno-{{ p.turno | lower | replace(' ', '-') }}">
+              {{ p.turno or '—' }}
+            </span>
+          </td>
+          <td>
+            <span class="estado-badge {% if p.activo %}estado-activo{% else %}estado-inactivo{% endif %}">
+              {% if p.activo %}● Activo{% else %}● Inactivo{% endif %}
+            </span>
+          </td>
+          <td>
+            <div class="td-acciones d-flex gap-2">
+              <a href="{{ url_for('detalle_personal', personal_id=p.id) }}"
+                 class="btn-secundario" style="font-size:0.8rem; padding:6px 11px;">
+                👁️ Ver panel
+              </a>
+              <a href="{{ url_for('editar_personal', personal_id=p.id) }}"
+                 class="btn btn-sm btn-outline-secondary btn-editar">✏️</a>
+              <a href="{{ url_for('eliminar_personal', personal_id=p.id) }}"
+                 class="btn btn-sm btn-outline-danger btn-eliminar"
+                 onclick="return confirm('¿Eliminar a {{ p.nombre }}?')">🗑️</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.getElementById('buscador').addEventListener('keyup', function () {
+    const texto = this.value.toLowerCase();
+    document.querySelectorAll('#tabla-body tr').forEach(fila => {
+      const nombre = fila.querySelector('.nombre-residente').textContent.toLowerCase();
+      fila.style.display = nombre.includes(texto) ? '' : 'none';
+    });
+  });
+</script>
+
+{% else %}
+<div class="contenedor">
+  <div class="vacio text-center py-5">
+    <p>No hay personal registrado aún.</p>
+    <a href="{{ url_for('registrar_personal') }}" class="btn-principal mt-2">
+      + Registrar el primero
+    </a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

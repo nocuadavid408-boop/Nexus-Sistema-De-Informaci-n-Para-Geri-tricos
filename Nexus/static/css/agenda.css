@@ -1,0 +1,95 @@
+/* Agenda, itinerario diario y ruta del personal (✓ / ✗) */
+
+/* Campos del formulario: visibles y responsivos (antes el desplegable se veía cortado) */
+.nx-campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; min-width: 0; }
+.nx-campo > label { font-size: .85rem; color: var(--txt-sec); }
+.nx-input, .nx-select, .nx-textarea {
+  width: 100%; max-width: 100%; box-sizing: border-box; min-height: 44px;
+  padding: 10px 12px; border-radius: var(--r-sm);
+  background: var(--bg-input); color: var(--txt);
+  border: 1px solid var(--border-acc); font: inherit;
+}
+.nx-select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 38px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat; background-position: right 12px center; text-overflow: ellipsis; }
+.nx-select option { background: #263568; color: #fff; }
+.nx-input:focus, .nx-select:focus, .nx-textarea:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+.nx-input[type=time], .nx-input[type=date] { color-scheme: dark; }
+
+/* Pestañas Medicamento / Actividad */
+.ag-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.ag-tab { padding: 10px 18px; border-radius: 999px; border: 1px solid var(--border-acc);
+  background: transparent; color: var(--txt-sec); cursor: pointer; font: inherit; }
+.ag-tab.activa { background: var(--gradient); color: #fff; border-color: transparent; }
+.ag-panel[hidden] { display: none; }
+.ag-grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+
+/* Horas múltiples (chips) */
+.ag-horas { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ag-horas .nx-input { width: 140px; }
+.ag-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; min-height: 36px; }
+.ag-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
+  border-radius: 999px; background: rgba(92,139,255,.22); border: 1px solid var(--border-acc); }
+.ag-chip button { background: none; border: 0; color: var(--txt); cursor: pointer; font-size: 1rem; line-height: 1; }
+.ag-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.ag-mini { padding: 6px 12px; border-radius: 999px; border: 1px dashed var(--border-acc);
+  background: transparent; color: var(--txt-sec); cursor: pointer; font: inherit; font-size: .82rem; }
+
+/* Calendario del mes (estilo Google Calendar) */
+.ag-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
+.ag-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.ag-cab h2 { margin: 0; flex: 1; font-size: 1.25rem; }
+.ag-nav { padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border-acc);
+  background: transparent; color: var(--txt); text-decoration: none; }
+.ag-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.ag-dow { text-align: center; font-size: .78rem; color: var(--txt-muted); padding: 4px 0; }
+.ag-dia { min-height: 86px; padding: 6px; border-radius: var(--r-sm); background: rgba(255,255,255,.04);
+  border: 1px solid var(--border); cursor: pointer; text-align: left; color: var(--txt); font: inherit;
+  display: flex; flex-direction: column; gap: 4px; }
+.ag-dia:hover { border-color: var(--blue); }
+.ag-dia.vacio { visibility: hidden; }
+.ag-dia.hoy .ag-num { background: var(--blue); color: #fff; }
+.ag-dia.sel { outline: 2px solid var(--purple); }
+.ag-num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .85rem; }
+.ag-pill { font-size: .72rem; padding: 2px 8px; border-radius: 999px; width: fit-content; }
+.ag-pill.ok { background: rgba(16,185,129,.25); color: #6ee7b7; }
+.ag-pill.pend { background: rgba(245,158,11,.25); color: #fcd34d; }
+.ag-pill.atras { background: rgba(239,68,68,.25); color: #fca5a5; }
+
+/* Itinerario del día */
+.ag-itin { position: sticky; top: 12px; }
+.ag-itin h3 { margin: 0 0 4px; }
+.ag-ruta { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ag-fila { display: grid; grid-template-columns: 56px 26px minmax(0,1fr) auto; gap: 10px; align-items: center;
+  padding: 10px 12px; border-radius: var(--r-md); background: rgba(255,255,255,.05);
+  border: 1px solid var(--border); border-left: 4px solid #f59e0b; }
+.ag-fila.ag-hecho { border-left-color: var(--success); }
+.ag-fila.ag-hecho .ag-texto strong { text-decoration: line-through; opacity: .7; }
+.ag-fila[data-tipo=Nota] { border-left-color: var(--purple); }
+.ag-hora { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ag-texto { min-width: 0; display: flex; flex-direction: column; }
+.ag-texto small { color: var(--txt-muted); overflow-wrap: anywhere; }
+.ag-check { display: flex; gap: 6px; }
+.ag-btn { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border-acc);
+  background: transparent; color: var(--txt-sec); font-size: 1.05rem; cursor: pointer; }
+.ag-btn:disabled { opacity: .5; }
+.ag-hecho .ag-ok { background: var(--success); border-color: var(--success); color: #fff; }
+.ag-pend .ag-no { background: var(--danger); border-color: var(--danger); color: #fff; }
+.ag-estado-solo { font-size: 1.1rem; }
+.ag-progreso { height: 8px; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; margin-bottom: 14px; }
+.ag-progreso-barra { height: 100%; background: var(--success); transition: width .3s; }
+.ag-nota-form { display: grid; grid-template-columns: 110px minmax(0,1fr) auto; gap: 8px; margin-top: 14px; }
+
+@media (max-width: 960px) {
+  .ag-layout { grid-template-columns: 1fr; }
+  .ag-itin { position: static; }
+  .ag-dia { min-height: 64px; }
+}
+@media (max-width: 520px) {
+  .ag-fila { grid-template-columns: 48px minmax(0,1fr) auto; }
+  .ag-icono { display: none; }
+  .ag-nota-form { grid-template-columns: 1fr; }
+}
+
+.ag-sec { margin: 16px 0 6px; font-size: .95rem; color: var(--txt-muted); }
+.ag-vacio { list-style: none; padding: 6px 0; }

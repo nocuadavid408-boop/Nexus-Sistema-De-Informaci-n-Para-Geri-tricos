@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Actividad{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>🏃 Actividad</h1>
+    <p class="page-subtitle">Elige un residente para ver o agregar sus actividades</p>
+  </div>
+</div>
+
+{% if residentes %}
+<div class="med-lista">
+  {% for r in residentes %}
+  <div class="contenedor" style="margin-bottom:14px;">
+    <div class="sf-perfil-top">
+      <div class="sf-avatar sf-avatar-blue">{{ r.nombre[0] | upper }}</div>
+      <div>
+        <p class="sf-nombre">{{ r.nombre }}</p>
+        <span class="sf-doc-badge">🛏️ {{ r.habitacion or '—' }}</span>
+      </div>
+    </div>
+    <div class="med-card-acciones">
+      <a href="{{ url_for('nueva_actividad', residente_id=r.id) }}" class="fl-btn fl-btn-agregar">➕ Agregar actividad</a>
+      <a href="{{ url_for('detalle_actividades', residente_id=r.id) }}" class="fl-btn">🏃 Ver actividades</a>
+      <a href="{{ url_for('agenda_residente', residente_id=r.id) }}" class="fl-btn">📅 Calendario</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="sf-vacio">📭 No tienes residentes asignados.</div>
+{% endif %}
+{% endblock %}

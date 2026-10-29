@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Medicamentos — {{ residente['nombre'] }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('lista_medicamentos') }}" class="btn-volver">← Volver a Medicamentos</a>
+    <h1 style="margin-top:10px;">💊 Medicamentos del Residente</h1>
+    <p class="page-subtitle">{{ residente['nombre'] }} — {{ residente['habitacion'] or 'Sin habitación' }}</p>
+  </div>
+  <a href="{{ url_for('nuevo_medicamento', residente_id=residente['id']) }}" class="btn-principal">➕ Agregar medicamento</a>
+</div>
+
+<!-- INFO RESIDENTE -->
+<div class="contenedor" style="margin-bottom:18px;">
+  <div class="sf-perfil-top">
+    <div class="sf-avatar sf-avatar-blue">{{ residente['nombre'][0] | upper }}</div>
+    <div>
+      <p class="sf-nombre">{{ residente['nombre'] }}</p>
+      <span class="sf-doc-badge">📄 {{ residente['documento'] }}</span>
+    </div>
+  </div>
+  <div class="sf-meta-row">
+    <div class="sf-meta-item">
+      <span class="sf-meta-label">Edad</span>
+      <span class="sf-meta-valor">{{ residente['edad'] }} años</span>
+    </div>
+    <div class="sf-meta-item">
+      <span class="sf-meta-label">Diagnóstico</span>
+      <span class="sf-meta-valor">{{ residente['diagnostico'] or '—' }}</span>
+    </div>
+    <div class="sf-meta-item">
+      <span class="sf-meta-label">Alergias</span>
+      <span class="sf-meta-valor" style="color:#fca5a5;">{{ residente['alergias'] or 'Ninguna' }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- LISTA DE MEDICAMENTOS ASIGNADOS -->
+<div class="contenedor">
+  <div class="sf-tabla-header">
+    <p class="sf-tabla-titulo">📋 Medicamentos Asignados</p>
+    <span class="med-count-badge">{{ medicamentos|length }} medicamento(s)</span>
+  </div>
+
+  {% if medicamentos %}
+  <div class="med-lista">
+    {% for m in medicamentos %}
+    <div class="med-item">
+      <div class="med-item-icon">💊</div>
+      <div class="med-item-info">
+        <p class="med-item-nombre">{{ m['nombre'] }} <small style="color:var(--txt-muted)">· {{ m['categoria'] }}</small></p>
+        <div class="med-item-meta">
+          <span class="med-badge-dosis">{{ m['dosis'] }}</span>
+          <span class="med-badge-hora">📅 {{ m['dia'] | dias_txt }}</span>
+          {% for h in m['horas'] %}
+          <span class="med-badge-hora">🕐 {{ h }}</span>
+          {% endfor %}
+        </div>
+        {% if m['observaciones'] %}
+        <p class="med-item-obs">{{ m['observaciones'] }}</p>
+        {% endif %}
+      </div>
+      {% if session.rol == 'Administrador' %}
+      <form method="POST" action="{{ url_for('itinerario_eliminar', residente_id=residente['id']) }}"
+            onsubmit="return confirm('¿Eliminar este medicamento de los días programados?')">
+        <input type="hidden" name="ids" value="{{ m['ids_txt'] }}">
+        <input type="hidden" name="volver" value="/medicamentos/{{ residente['id'] }}">
+        <button type="submit" class="med-btn-eliminar" title="Eliminar">🗑️</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sf-vacio">
+    💊 No hay medicamentos asignados aún.
+    <br><a href="{{ url_for('nuevo_medicamento', residente_id=residente['id']) }}" class="btn-volver" style="margin-top:12px;display:inline-block;">➕ Agregar el primero</a>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

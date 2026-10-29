@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Residentes{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Residentes</h1>
+    <p class="page-subtitle">
+      {{ residentes|length }} residente(s){% if session.rol == 'Administrador' %} registrado(s){% else %} asignado(s) a ti{% endif %}
+    </p>
+  </div>
+  {% if session.rol == 'Administrador' %}
+  <a href="{{ url_for('registrar_residente') }}" class="btn btn-primary btn-principal">
+    + Registrar residente
+  </a>
+  {% endif %}
+</div>
+
+{% if residentes %}
+<div class="contenedor" style="padding: 24px 28px;">
+
+  <div class="tabla-header mb-3">
+    <input type="text" id="buscador" class="form-control buscador"
+           placeholder="🔍 Buscar residente...">
+  </div>
+
+  <div class="table-responsive tabla-wrapper">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Documento</th>
+          <th>Edad</th>
+          <th>Habitación</th>
+          <th>Familiar</th>
+          <th>Teléfono</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body">
+        {% for r in residentes %}
+        <tr>
+          <td class="nombre-residente">{{ r.nombre }}</td>
+          <td><span class="doc-badge badge bg-secondary">{{ r.documento }}</span></td>
+          <td>{{ r.edad }} años</td>
+          <td>{{ r.habitacion }}</td>
+          <td>
+            {{ r.familiar_nombre }}
+            <span style="color:var(--txt-muted);font-size:0.78rem">
+              ({{ r.familiar_parentesco }})
+            </span>
+            <br>
+            {% if r.familiar_username %}
+            <span class="badge" style="background:rgba(16,185,129,0.15);color:#6ee7b7;font-weight:500;font-size:0.7rem;">
+              🔗 vinculado: {{ r.familiar_username }}
+            </span>
+            {% else %}
+            <span class="badge" style="background:rgba(239,68,68,0.12);color:#fca5a5;font-weight:500;font-size:0.7rem;">
+              ⚠️ sin cuenta vinculada
+            </span>
+            {% endif %}
+          </td>
+          <td>{{ r.familiar_telefono }}</td>
+          <td>
+            <div class="td-acciones d-flex gap-2">
+              <a href="{{ url_for('seguimiento_familiar', residente_id=r.id) }}"
+                 class="btn-secundario" style="font-size:0.8rem; padding:6px 11px;">
+                👨‍👩‍👧 Familiar
+              </a>
+              <a href="{{ url_for('agenda_residente', residente_id=r.id) }}"
+                 class="btn-secundario" style="font-size:0.8rem; padding:6px 11px;">
+                📅 Calendario
+              </a>
+              {% if session.rol == 'Administrador' %}
+              <a href="{{ url_for('editar_residente', residente_id=r.id) }}"
+                 class="btn btn-sm btn-outline-secondary btn-editar">✏️ Editar</a>
+              <a href="{{ url_for('eliminar_residente', residente_id=r.id) }}"
+                 class="btn btn-sm btn-outline-danger btn-eliminar"
+                 onclick="return confirm('¿Eliminar a {{ r.nombre }}?')">🗑️</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('buscador').addEventListener('keyup', function () {
+    const texto = this.value.toLowerCase();
+    document.querySelectorAll('#tabla-body tr').forEach(fila => {
+      const nombre = fila.querySelector('.nombre-residente')
+                        .textContent.toLowerCase();
+      fila.style.display = nombre.includes(texto) ? '' : 'none';
+    });
+  });
+</script>
+
+{% else %}
+<div class="contenedor">
+  <div class="vacio text-center py-5">
+    {% if session.rol == 'Administrador' %}
+    <p>No hay residentes registrados aún.</p>
+    <a href="{{ url_for('registrar_residente') }}" class="btn btn-primary mt-2">
+      + Registrar el primero
+    </a>
+    {% else %}
+    <p>Todavía no tienes residentes asignados.</p>
+    <p class="text-muted" style="font-size:0.85rem;margin-top:8px">
+      El administrador te los asignará y aparecerán aquí.
+    </p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

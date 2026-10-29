@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Notificaciones{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>🔔 Notificaciones y Alertas</h1>
+    <p class="page-subtitle">{{ notificaciones|length }} alerta(s) sonada(s)</p>
+  </div>
+</div>
+
+{% if notificaciones %}
+<div class="fl-grid">
+  {% for n in notificaciones %}
+  <div class="fl-card">
+
+    <div class="fl-card-top">
+      <div class="fl-avatar">{{ n['residente'][0] | upper }}</div>
+      <div class="fl-card-info">
+        <p class="fl-nombre">{{ n['residente'] }}</p>
+        <span class="fl-doc">{{ n['tipo'] }}</span>
+      </div>
+      <span class="notif-estado notif-{{ n['estado'] | lower }}">{{ n['estado'] }}</span>
+    </div>
+
+    <div class="fl-datos" style="grid-template-columns: 1fr;">
+      <div class="fl-dato">
+        <span class="fl-dato-label">Detalle</span>
+        <span class="fl-dato-valor">{{ n['detalle'] or 'Sin detalle' }}</span>
+      </div>
+      <div class="fl-dato">
+        <span class="fl-dato-label">Fecha</span>
+        <span class="fl-dato-valor">📅 {{ n['fecha'] }}</span>
+      </div>
+      <div class="fl-dato">
+        <span class="fl-dato-label">Hora</span>
+        <span class="fl-dato-valor">🕒 {{ n['hora'] }}</span>
+      </div>
+    </div>
+
+    <div class="td-acciones d-flex gap-2 mt-2">
+      {% if n['estado'] == 'Pendiente' %}
+      <a href="{{ url_for('completar_notificacion', notificacion_id=n['id']) }}"
+         class="btn btn-sm btn-outline-success">✔ Completar</a>
+      {% endif %}
+      {% if session.rol == 'Administrador' %}
+      <a href="{{ url_for('eliminar_notificacion', notificacion_id=n['id']) }}"
+         class="btn btn-sm btn-outline-danger btn-eliminar"
+         onclick="return confirm('¿Eliminar esta alerta?')">🗑️</a>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="contenedor">
+  <div class="vacio text-center py-5">
+    <p>No hay alertas registradas.</p>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

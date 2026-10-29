@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus — Iniciar Sesión</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/nexus.css') }}">
+</head>
+<body class="login-split-body">
+
+<div class="login-split">
+
+  <!-- ============================================
+       IZQUIERDA — FORMULARIO
+       ============================================ -->
+  <div class="login-split-form">
+
+    <div class="login-split-form-inner">
+
+      <div class="auth-brand auth-brand--left">
+        <img src="{{ url_for('static', path='img/logo.png') }}" alt="Nexus" class="auth-logo">
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert {% if category == 'exito' %}alert-success{% elif category == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <h1 class="login-split-title">Bienvenido de nuevo</h1>
+      <p class="login-split-subtitle">Inicia sesión para continuar</p>
+
+      <form method="POST" class="auth-form">
+
+        <div class="grupo-input mb-3">
+          <label class="form-label">Usuario</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" name="username" class="form-control"
+                   placeholder="Ingresa tu usuario"
+                   value="{{ form_username|default('') }}"
+                   autocomplete="username" required autofocus>
+          </div>
+        </div>
+
+        <div class="grupo-input mb-3">
+          <label class="form-label">Contraseña</label>
+
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔒</span>
+
+            <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                required>
+
+            <button
+                type="button"
+                id="togglePassword"
+                class="toggle-password"
+                aria-label="Mostrar contraseña">
+
+                <i id="eyeIcon" class="bi bi-eye"></i>
+
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 btn-login">Iniciar sesión →</button>
+
+        <div class="text-center mt-3">
+    <a href="{{ url_for('cambiar_password') }}" class="forgot-password">
+        ¿Olvidaste tu contraseña?
+    </a>
+</div>
+
+      </form>
+
+      <div class="auth-divider"><span>¿No tienes cuenta?</span></div>
+
+      <a href="{{ url_for('registro') }}" class="btn btn-outline-secondary w-100 btn-auth-link">✨ Crear nueva cuenta</a>
+
+      <div class="auth-hint mt-3">
+        🔑 <strong>Accesos de prueba</strong><br>
+        Administrador: <code>admin</code> / <code>admin123</code><br>
+        Cuidador: <code>cuidador</code> / <code>cuidador123</code><br>
+        Familiar: <code>familiar</code> / <code>familiar123</code>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ============================================
+       DERECHA — ILUSTRACIÓN + MENSAJE DE MARCA
+       ============================================ -->
+  <div class="login-split-hero">
+    <div class="login-split-hero-overlay"></div>
+
+    <div class="login-split-hero-content">
+      <h2 class="login-hero-title">
+        Bienestar que<br>
+        <span class="login-hero-title-accent">conecta vidas</span>
+      </h2>
+
+      <div class="login-hero-divider">
+        <span></span><span></span><span></span>
+      </div>
+
+      <p class="login-hero-text">
+        En Nexus ofrecemos un hogar seguro, cálido y digno para nuestros
+        adultos mayores.
+      </p>
+
+      <ul class="login-hero-features">
+        <li>
+          <span class="login-hero-icon"><i class="bi bi-shield-check"></i></span>
+          Atención personalizada
+        </li>
+        <li>
+          <span class="login-hero-icon"><i class="bi bi-heart"></i></span>
+          Cuidado con el corazón
+        </li>
+        <li>
+          <span class="login-hero-icon"><i class="bi bi-plus-square"></i></span>
+          Seguridad y confianza
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+const togglePassword = document.getElementById("togglePassword");
+const password = document.getElementById("password");
+const eyeIcon = document.getElementById("eyeIcon");
+
+togglePassword.addEventListener("click", function () {
+    if (password.type === "password") {
+        password.type = "text";
+        eyeIcon.classList.remove("bi-eye");
+        eyeIcon.classList.add("bi-eye-slash");
+    } else {
+        password.type = "password";
+        eyeIcon.classList.remove("bi-eye-slash");
+        eyeIcon.classList.add("bi-eye");
+    }
+});
+</script>
+</body>
+</html>

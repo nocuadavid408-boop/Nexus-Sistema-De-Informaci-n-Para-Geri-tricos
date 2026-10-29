@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>🧑‍💼 Gestión de Usuarios</h1>
+    <p class="page-subtitle">Cuentas registradas en el sistema Nexus</p>
+  </div>
+</div>
+
+<div class="contenedor">
+  <div class="tabla-header mb-3">
+    <span class="text-muted" style="font-size:0.88rem">{{ usuarios|length }} usuario(s) en el sistema</span>
+  </div>
+
+  <div class="table-responsive tabla-wrapper">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td class="text-muted" style="font-size:0.8rem">{{ u.id }}</td>
+          <td class="nombre-residente">{{ u.nombre or '—' }}</td>
+          <td><span class="doc-badge badge bg-secondary">{{ u.username }}</span></td>
+          <td class="text-muted">{{ u.correo or '—' }}</td>
+          <td><span class="rol-badge rol-{{ u.rol | lower }} badge
+            {% if u.rol == 'Administrador' %}bg-danger
+            {% elif u.rol == 'Cuidador' %}bg-primary
+            {% else %}bg-success{% endif %}">{{ u.rol }}</span></td>
+          <td>
+            <div class="td-acciones">
+
+           {% if u.rol == 'Cuidador' %}
+          <a href="{{ url_for('pdf_cuidador_admin', cuidador_id=u.id) }}"
+           class="btn btn-sm btn-outline-primary">
+          📄 Ver PDF
+          </a>
+          {% endif %}
+
+  {% if u.id != session.user_id %}
+  <a href="{{ url_for('eliminar_usuario', uid=u.id) }}"
+     class="btn btn-sm btn-outline-danger btn-eliminar"
+     onclick="return confirm('¿Eliminar al usuario {{ u.username }}?')">
+    🗑 Eliminar
+  </a>
+  {% else %}
+  <span class="text-muted" style="font-size:0.78rem">(tu cuenta)</span>
+  {% endif %}
+
+</div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">No hay usuarios registrados.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

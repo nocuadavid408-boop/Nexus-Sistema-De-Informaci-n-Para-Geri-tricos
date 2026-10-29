@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Crear — {{ residente['nombre'] }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/agenda.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('agenda_residente', residente_id=residente['id']) }}" class="btn-volver">← Volver a la agenda</a>
+    <h1 style="margin-top:10px;">➕ Crear en el itinerario</h1>
+    <p class="page-subtitle">{{ residente['nombre'] }} — {{ residente['habitacion'] or 'Sin habitación' }}
+      · Alergias: <span style="color:#fca5a5;">{{ residente['alergias'] or 'Ninguna' }}</span></p>
+  </div>
+</div>
+
+<div class="ag-tabs">
+  <button type="button" class="ag-tab {{ 'activa' if tab == 'medicamento' }}" data-tab="medicamento">💊 Medicamento</button>
+  <button type="button" class="ag-tab {{ 'activa' if tab == 'actividad' }}" data-tab="actividad">🏃 Actividad</button>
+</div>
+
+<form id="form-itin" method="POST" action="{{ url_for('itinerario_guardar', residente_id=residente['id']) }}"
+      class="ag-panel">
+  <input type="hidden" name="tipo" id="tipo" value="{{ tab }}">
+  <div class="ag-grid-form">
+
+    <div class="contenedor">
+      <div class="seccion-form">
+        <h2 id="titulo-tipo">{{ '💊 Medicamento' if tab == 'medicamento' else '🏃 Actividad' }}</h2>
+
+        <div class="nx-campo">
+          <label for="categoria_id">Categoría *</label>
+          <select id="categoria_id" name="categoria_id" class="nx-select" required></select>
+        </div>
+
+        <div class="nx-campo">
+          <label for="item_id" id="lbl-item">{{ 'Medicamento' if tab == 'medicamento' else 'Actividad' }} *</label>
+          <select id="item_id" name="item_id" class="nx-select" required disabled></select>
+        </div>
+
+        <div class="nx-campo" id="campo-dosis" {{ 'hidden' if tab != 'medicamento' }}>
+          <label for="dosis">Dosis *</label>
+          <input id="dosis" name="dosis" class="nx-input" type="text" maxlength="100" placeholder="Ej: 500 mg">
+        </div>
+
+        <div class="nx-campo">
+          <label>Horas * <small>(puedes poner varias en el mismo día)</small></label>
+          <div class="ag-horas">
+            <input type="time" id="hora-nueva" class="nx-input" aria-label="Nueva hora">
+            <button type="button" class="ag-tab activa" id="hora-agregar">+ Agregar hora</button>
+          </div>
+          <div class="ag-presets">
+            <button type="button" class="ag-mini" data-preset="08:00,20:00">Cada 12 h</button>
+            <button type="button" class="ag-mini" data-preset="06:00,14:00,22:00">Cada 8 h</button>
+            <button type="button" class="ag-mini" data-preset="06:00,12:00,18:00,00:00">Cada 6 h</button>
+          </div>
+          <div class="ag-chips" id="horas-chips"></div>
+          <div id="horas-hidden"></div>
+        </div>
+
+        {% if session.rol == 'Administrador' %}
+        <div class="nx-campo">
+          <label for="personal_id">Responsable (opcional)</label>
+          <select id="personal_id" name="personal_id" class="nx-select">
+            <option value="">Cualquiera de los asignados</option>
+            {% for p in personal %}<option value="{{ p['id'] }}">{{ p['nombre'] }}</option>{% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        <div class="nx-campo">
+          <label for="observaciones">Observaciones</label>
+          <textarea id="observaciones" name="observaciones" class="nx-textarea" rows="7"
+                    style="min-height:160px;width:100%;resize:vertical"
+                    placeholder="Indicaciones, cuidados especiales, cómo administrarlo…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="contenedor">
+      <div class="seccion-form">
+        <h2>📅 Días *</h2>
+        {% include '_calendario.html' %}
+        <div class="acciones-form" style="margin-top:16px;">
+          <button type="submit" class="btn-principal" id="btn-guardar">✅ Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='js/itinerario.js') }}"></script>
+<script>
+(function () {
+  const form = document.getElementById('form-itin');
+  const selCat = document.getElementById('categoria_id');
+  const selItem = document.getElementById('item_id');
+  const tipoInput = document.getElementById('tipo');
+  let tipo = tipoInput.value;
+
+  // ---- Pestañas: cambian el tipo y recargan la cascada ----
+  function aplicarTipo() {
+    tipoInput.value = tipo;
+    document.querySelectorAll('.ag-tab[data-tab]').forEach(b => b.classList.toggle('activa', b.dataset.tab === tipo));
+    document.getElementById('titulo-tipo').textContent = tipo === 'medicamento' ? '💊 Medicamento' : '🏃 Actividad';
+    document.getElementById('lbl-item').textContent = (tipo === 'medicamento' ? 'Medicamento' : 'Actividad') + ' *';
+    const campoDosis = document.getElementById('campo-dosis');
+    campoDosis.hidden = tipo !== 'medicamento';
+    document.getElementById('dosis').required = tipo === 'medicamento';
+    nxCargarCategorias(tipo, selCat, selItem);
+  }
+  document.querySelectorAll('.ag-tab[data-tab]').forEach(b => b.addEventListener('click', () => {
+    tipo = b.dataset.tab; aplicarTipo();
+  }));
+  selCat.addEventListener('change', () => nxCargarItems(tipo, selCat.value, selItem));
+
+  // ---- Horas múltiples: cada hora es un chip y un <input name="horas"> oculto ----
+  const chips = document.getElementById('horas-chips');
+  const ocultos = document.getElementById('horas-hidden');
+  const nueva = document.getElementById('hora-nueva');
+  let horas = [];
+  function pintar() {
+    horas = [...new Set(horas)].sort();
+    chips.innerHTML = horas.map(h =>
+      `<span class="ag-chip">🕐 ${h}<button type="button" data-h="${h}" aria-label="Quitar ${h}">×</button></span>`).join('')
+      || '<small style="color:var(--txt-muted)">Aún no hay horas</small>';
+    ocultos.innerHTML = horas.map(h => `<input type="hidden" name="horas" value="${h}">`).join('');
+  }
+  document.getElementById('hora-agregar').addEventListener('click', () => {
+    if (nueva.value) { horas.push(nueva.value); nueva.value = ''; pintar(); }
+  });
+  nueva.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('hora-agregar').click(); } });
+  chips.addEventListener('click', e => {
+    const b = e.target.closest('button[data-h]');
+    if (b) { horas = horas.filter(h => h !== b.dataset.h); pintar(); }
+  });
+  document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+    horas = b.dataset.preset.split(','); pintar();
+  }));
+
+  // ---- Guardar: una fila por día, con todas las horas en el JSON ----
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!horas.length) return alert('Agrega al menos una hora.');
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = true;
+    try {
+      const fd = new FormData(form);
+      const d = await (await fetch(form.action, { method: 'POST', body: fd })).json();
+      if (!d.ok) return alert(d.error || 'No se pudo guardar.');
+      const primera = (fd.get('fechas') || '').split(',')[0].trim();
+      const url = new URL("{{ url_for('agenda_residente', residente_id=residente['id']) }}", location.origin);
+      if (primera) { url.searchParams.set('mes', primera.slice(0, 7)); url.searchParams.set('dia', primera); }
+      location.href = url.toString();
+    } catch (err) {
+      alert('Error de conexión. Intenta de nuevo.');
+    } finally { btn.disabled = false; }
+  });
+
+  pintar();
+  aplicarTipo();
+})();
+</script>
+{% endblock %}

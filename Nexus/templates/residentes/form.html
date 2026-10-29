@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}{% if editando %}Editar{% else %}Registrar{% endif %} Residente{% endblock %}
+
+{% block content %}
+
+<div class="contenedor">
+
+  <div class="cabecera-form mb-3">
+    <a href="{{ url_for('lista_residentes') }}" class="btn btn-outline-secondary btn-volver">← Volver</a>
+    <h1>
+      {% if editando %}
+        ✏️ Editar Residente
+      {% else %}
+        ➕ Registro de Residente
+      {% endif %}
+    </h1>
+  </div>
+
+  <form method="POST"
+        action="{% if editando %}{{ url_for('editar_residente', residente_id=residente_id) }}{% else %}{{ url_for('registrar_residente') }}{% endif %}">
+
+    <!-- DATOS PERSONALES -->
+    <div class="seccion-form">
+      <h2>👤 Datos Personales</h2>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Nombre completo *</label>
+            <input type="text" name="nombre" class="form-control"
+                   placeholder="Ej: María García López"
+                   value="{{ datos.get('nombre', '') }}" required>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Número de documento *</label>
+            <input type="text" name="documento" class="form-control"
+                   placeholder="Ej: 1234567890"
+                   value="{{ datos.get('documento', '') }}" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-4">
+          <div class="grupo-input">
+            <label class="form-label">Edad *</label>
+            <input type="number" name="edad" class="form-control"
+                   placeholder="Ej: 78" min="1" max="120"
+                   value="{{ datos.get('edad', '') }}" required>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="grupo-input">
+            <label class="form-label">Fecha de ingreso *</label>
+            <input type="date" name="fecha_ingreso" class="form-control"
+                   value="{{ datos.get('fecha_ingreso', '') }}" required>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="grupo-input">
+            <label class="form-label">Habitación *</label>
+            <input type="text" name="habitacion" class="form-control"
+                   placeholder="Ej: 101-A"
+                   value="{{ datos.get('habitacion', '') }}" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL MÉDICO -->
+    <div class="seccion-form">
+      <h2>🏥 Historial Médico</h2>
+
+      <div class="grupo-input mb-3">
+        <label class="form-label">Diagnóstico principal</label>
+        <textarea name="diagnostico" class="form-control"
+                  placeholder="Ej: Hipertensión, Diabetes tipo 2..."
+                  rows="2">{{ datos.get('diagnostico', '') }}</textarea>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Medicamentos actuales</label>
+            <textarea name="medicamentos" class="form-control"
+                      placeholder="Ej: Metformina 500mg, Losartán 50mg..."
+                      rows="2">{{ datos.get('medicamentos', '') }}</textarea>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Alergias conocidas</label>
+            <textarea name="alergias" class="form-control"
+                      placeholder="Ej: Penicilina, Ibuprofeno..."
+                      rows="2">{{ datos.get('alergias', '') }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAMILIAR -->
+    <div class="seccion-form">
+      <h2>📞 Contacto Familiar Responsable</h2>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="grupo-input">
+            <label class="form-label">Nombre del familiar *</label>
+            <input type="text" name="familiar_nombre" class="form-control"
+                   placeholder="Ej: Carlos García"
+                   value="{{ datos.get('familiar_nombre', '') }}" required>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="grupo-input">
+            <label class="form-label">Parentesco *</label>
+            <input type="text" name="familiar_parentesco" class="form-control"
+                   placeholder="Ej: Hijo, Hija..."
+                   value="{{ datos.get('familiar_parentesco', '') }}" required>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="grupo-input">
+            <label class="form-label">Teléfono *</label>
+            <input type="tel" name="familiar_telefono" class="form-control"
+                   placeholder="Ej: 3001234567"
+                   value="{{ datos.get('familiar_telefono', '') }}" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <div class="grupo-input">
+            <label class="form-label">Usuario del familiar (cuenta del sistema)</label>
+            <input type="text" name="familiar_username" class="form-control"
+                   placeholder="Ej: carlos_garcia"
+                   value="{{ datos.get('familiar_username', '') }}">
+          </div>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <p class="page-subtitle mb-2">
+            🔗 Escribe aquí el mismo nombre de usuario con el que el familiar creó su
+            cuenta (rol Familiar). Así queda vinculado el residente con esa cuenta y,
+            al iniciar sesión, el familiar solo verá la información de este adulto mayor.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCIONES -->
+    <div class="acciones-form d-flex gap-2 justify-content-end mt-3">
+      <a href="{{ url_for('lista_residentes') }}" class="btn btn-outline-secondary btn-cancelar">Cancelar</a>
+      <button type="submit" class="btn btn-primary btn-principal">
+        {% if editando %}💾 Guardar Cambios{% else %}✅ Registrar Residente{% endif %}
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock %}

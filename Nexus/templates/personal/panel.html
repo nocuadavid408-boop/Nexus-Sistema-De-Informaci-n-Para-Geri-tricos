@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Panel — {{ personal.nombre }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/agenda.css') }}">
+<!-- Panel en cuasi tiempo real: se refresca automáticamente cada 30s (RF06) -->
+<meta http-equiv="refresh" content="30">
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    {% if session.rol == 'Administrador' %}
+    <a href="{{ url_for('lista_personal') }}" class="btn-volver">← Volver a Personal</a>
+    {% endif %}
+    <h1 style="margin-top:10px;">👨‍⚕️ Panel del Cuidador</h1>
+    <p class="page-subtitle">Información y actividades asignadas</p>
+  </div>
+  {% if session.rol == 'Administrador' %}
+  <a href="{{ url_for('editar_personal', personal_id=personal.id) }}" class="btn-principal">
+    ✏️ Editar
+  </a>
+  {% endif %}
+</div>
+
+<!-- PERFIL PRINCIPAL -->
+<div class="contenedor pd-perfil-card" style="margin-bottom:18px;">
+  <div class="pd-perfil-izq">
+    <div class="pd-avatar">{{ personal.nombre[0] | upper }}</div>
+    <div class="pd-info">
+      <h2 class="pd-nombre">{{ personal.nombre }}</h2>
+      <p class="pd-correo">{{ personal.correo or 'Sin correo registrado' }}</p>
+      <p class="pd-tel">📱 {{ personal.telefono or 'Sin teléfono' }}</p>
+    </div>
+  </div>
+  <div class="pd-perfil-der">
+    <div class="pd-stat">
+      <span class="pd-stat-label">Turno</span>
+      <span class="pd-stat-valor turno-badge turno-{{ personal.turno | lower | replace(' ', '-') }}">
+        🕐 {{ personal.turno or '—' }}
+      </span>
+    </div>
+    <div class="pd-stat">
+      <span class="pd-stat-label">Estado</span>
+      <span class="pd-stat-valor {% if personal.activo %}estado-activo{% else %}estado-inactivo{% endif %}">
+        {% if personal.activo %}● Activo{% else %}● Inactivo{% endif %}
+      </span>
+    </div>
+    <div class="pd-stat">
+      <span class="pd-stat-label">Hechas hoy</span>
+      <span class="pd-stat-valor pd-stat-num" id="ruta-hechas-top">{{ hechos }}/{{ eventos|length }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- RUTA DEL DÍA: ✓ hecho / ✗ pendiente -->
+<div class="contenedor" style="margin-bottom:24px;">
+  <div class="sf-tabla-header" style="margin-bottom:14px;">
+    <p class="sf-tabla-titulo">📋 Ruta del día — {{ hoy }}</p>
+    <span class="med-count-badge" id="ruta-contador">{{ hechos }} de {{ eventos|length }} hechas</span>
+  </div>
+  <div class="ag-progreso"><div class="ag-progreso-barra" id="ruta-barra"
+       style="width: {{ (hechos * 100 // eventos|length) if eventos else 0 }}%"></div></div>
+
+  {% if eventos %}
+  <ul class="ag-ruta" id="ruta">
+    {% for e in eventos %}
+    <li class="ag-fila {{ 'ag-hecho' if e.completado else 'ag-pend' }}" data-id="{{ e.id }}" data-hora="{{ e.hora }}">
+      <span class="ag-hora">{{ e.hora }}</span>
+      <span class="ag-icono">{{ '💊' if e.tipo == 'medicamento' else '🏃' }}</span>
+      <div class="ag-texto">
+        <strong>{{ e.nombre }}</strong>
+        <small>👤 {{ e.residente_nombre }}{% if e.observaciones %} · {{ e.observaciones }}{% endif %}</small>
+      </div>
+      <div class="ag-check" role="group" aria-label="Estado">
+        <button type="button" class="ag-btn ag-ok" title="Completado"
+                onclick="nxCheck({{ e.id }}, '{{ e.hora }}', 'completado', this)">✓</button>
+        <button type="button" class="ag-btn ag-no" title="Pendiente"
+                onclick="nxCheck({{ e.id }}, '{{ e.hora }}', 'pendiente', this)">✗</button>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="sf-vacio">📭 No hay tareas para hoy.</div>
+  {% endif %}
+</div>
+
+<!-- ACCIONES -->
+<div class="acciones-form">
+  <a href="{{ url_for('lista_personal') }}" class="btn-cancelar">← Volver</a>
+  {% if session.rol == 'Administrador' %}
+  <a href="{{ url_for('eliminar_personal', personal_id=personal.id) }}"
+     class="btn-eliminar"
+     onclick="return confirm('¿Eliminar a {{ personal.nombre }}?')">🗑️ Eliminar</a>
+  {% endif %}
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='js/itinerario.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Agenda{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>📅 Agenda</h1>
+    <p class="page-subtitle">Elige un residente para ver su calendario e itinerario.</p>
+  </div>
+</div>
+
+<div class="contenedor">
+  {% if residentes %}
+  <div class="med-lista">
+    {% for r in residentes %}
+    <a class="med-item" style="text-decoration:none;color:inherit;"
+       href="{{ url_for('agenda_residente', residente_id=r['id']) }}">
+      <div class="med-item-icon">👤</div>
+      <div class="med-item-info">
+        <p class="med-item-nombre">{{ r['nombre'] }}</p>
+        <div class="med-item-meta"><span class="med-badge-hora">Hab. {{ r['habitacion'] or '—' }}</span></div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="sf-vacio">📭 No hay residentes disponibles para tu cuenta.</div>
+  {% endif %}
+</div>
+{% endblock %}

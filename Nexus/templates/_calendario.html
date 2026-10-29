@@ -1,0 +1,169 @@
+{# Mini calendario para elegir los días del mes.
+   Variables: hoy (YYYY-MM-DD, primer día elegible), fechas_sel ("2026-10-21, 2026-10-23").
+   Envía el campo oculto "fechas" con las fechas separadas por coma. #}
+<div class="cal-mini" id="cal-mini" data-min="{{ hoy }}">
+  <input type="hidden" name="fechas" id="cal-valor" value="{{ fechas_sel or '' }}">
+
+  <div class="cal-cab">
+    <button type="button" class="cal-nav" id="cal-prev" aria-label="Mes anterior">‹</button>
+    <span class="cal-titulo" id="cal-titulo"></span>
+    <button type="button" class="cal-nav" id="cal-next" aria-label="Mes siguiente">›</button>
+  </div>
+
+  <div class="cal-semana" id="cal-semana"></div>
+  <div class="cal-grid" id="cal-grid"></div>
+
+  <div class="cal-pie">
+    <span id="cal-resumen">Ningún día elegido</span>
+    <button type="button" class="cal-limpiar" id="cal-limpiar">Limpiar</button>
+  </div>
+  <div class="cal-chips" id="cal-chips"></div>
+  <small class="dias-ayuda">Toca los días en que se administra. Toca la letra de un día de la semana (L, M, X…) para marcar o desmarcar todos los de ese mes.</small>
+</div>
+
+<script>
+(function () {
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const MESES_C = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const DIAS_C = ['dom','lun','mar','mié','jue','vie','sáb'];
+  const CABECERA = [['L','Lunes'],['M','Martes'],['X','Miércoles'],['J','Jueves'],['V','Viernes'],['S','Sábados'],['D','Domingos']];
+  const MAX = 62;
+
+  const raiz = document.getElementById('cal-mini');
+  const valor = document.getElementById('cal-valor');
+  const grid = document.getElementById('cal-grid');
+  const chips = document.getElementById('cal-chips');
+  const resumen = document.getElementById('cal-resumen');
+  const titulo = document.getElementById('cal-titulo');
+  const prev = document.getElementById('cal-prev');
+  const next = document.getElementById('cal-next');
+
+  const iso = (y, m, d) => y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+  const aFecha = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+
+  const minimo = raiz.dataset.min;
+  const [minY, minM] = minimo.split('-').map(Number);
+  const elegidas = new Set(
+    valor.value.split(',').map(s => s.trim()).filter(s => /^\d{4}-\d{2}-\d{2}$/.test(s) && s >= minimo)
+  );
+
+  // Mes que se muestra: el de la primera fecha elegida o el de hoy.
+  const primera = [...elegidas].sort()[0] || minimo;
+  let vistaY = Number(primera.slice(0, 4));
+  let vistaM = Number(primera.slice(5, 7)) - 1;
+
+  // Cabecera L M X J V S D (lunes = 0)
+  const semana = document.getElementById('cal-semana');
+  CABECERA.forEach(([letra, nombre], i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = letra;
+    b.title = 'Marcar o desmarcar todos los ' + nombre.toLowerCase() + ' del mes';
+    b.addEventListener('click', () => alternarSemana(i));
+    semana.appendChild(b);
+  });
+
+  function diasValidosDelMes(diaSemana) {
+    const total = new Date(vistaY, vistaM + 1, 0).getDate();
+    const lista = [];
+    for (let d = 1; d <= total; d++) {
+      const f = iso(vistaY, vistaM, d);
+      const lunes0 = (new Date(vistaY, vistaM, d).getDay() + 6) % 7;
+      if (f >= minimo && (diaSemana === undefined || lunes0 === diaSemana)) lista.push(f);
+    }
+    return lista;
+  }
+
+  function alternarSemana(diaSemana) {
+    const dias = diasValidosDelMes(diaSemana);
+    if (!dias.length) return;
+    const todos = dias.every(f => elegidas.has(f));
+    dias.forEach(f => todos ? elegidas.delete(f) : elegidas.add(f));
+    pintar();
+  }
+
+  function alternar(f) {
+    if (elegidas.has(f)) {
+      elegidas.delete(f);
+    } else if (elegidas.size < MAX) {
+      elegidas.add(f);
+    }
+    pintar();
+  }
+
+  function pintar() {
+    titulo.textContent = MESES[vistaM] + ' ' + vistaY;
+    prev.disabled = (vistaY < minY || (vistaY === minY && vistaM <= minM - 1));
+
+    grid.innerHTML = '';
+    const primerLunes0 = (new Date(vistaY, vistaM, 1).getDay() + 6) % 7;
+    const total = new Date(vistaY, vistaM + 1, 0).getDate();
+    for (let i = 0; i < primerLunes0; i++) {
+      grid.appendChild(document.createElement('span'));
+    }
+    for (let d = 1; d <= total; d++) {
+      const f = iso(vistaY, vistaM, d);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = d;
+      b.className = 'cal-dia';
+      if (f < minimo) {
+        b.disabled = true;
+      } else {
+        b.addEventListener('click', () => alternar(f));
+      }
+      if (f === minimo) b.classList.add('cal-hoy');
+      if (elegidas.has(f)) b.classList.add('cal-sel');
+      b.setAttribute('aria-pressed', elegidas.has(f) ? 'true' : 'false');
+      grid.appendChild(b);
+    }
+
+    const ordenadas = [...elegidas].sort();
+    valor.value = ordenadas.join(',');
+    resumen.textContent = ordenadas.length === 0
+      ? 'Ningún día elegido'
+      : ordenadas.length + (ordenadas.length === 1 ? ' día elegido' : ' días elegidos') +
+        (ordenadas.length >= MAX ? ' (máximo)' : '');
+
+    chips.innerHTML = '';
+    ordenadas.forEach(f => {
+      const fecha = aFecha(f);
+      const chip = document.createElement('span');
+      chip.className = 'cal-chip';
+      chip.textContent = DIAS_C[fecha.getDay()] + ' ' + fecha.getDate() + ' ' + MESES_C[fecha.getMonth()];
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.textContent = '×';
+      x.setAttribute('aria-label', 'Quitar ' + f);
+      x.addEventListener('click', () => { elegidas.delete(f); pintar(); });
+      chip.appendChild(x);
+      chips.appendChild(chip);
+    });
+  }
+
+  prev.addEventListener('click', () => {
+    vistaM--; if (vistaM < 0) { vistaM = 11; vistaY--; }
+    pintar();
+  });
+  next.addEventListener('click', () => {
+    vistaM++; if (vistaM > 11) { vistaM = 0; vistaY++; }
+    pintar();
+  });
+  document.getElementById('cal-limpiar').addEventListener('click', () => { elegidas.clear(); pintar(); });
+
+  // No enviar el formulario sin ningún día elegido.
+  const formulario = raiz.closest('form');
+  if (formulario) {
+    formulario.addEventListener('submit', (e) => {
+      if (elegidas.size === 0) {
+        e.preventDefault();
+        resumen.textContent = 'Elige al menos un día en el calendario';
+        resumen.classList.add('cal-error');
+        raiz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  pintar();
+})();
+</script>
