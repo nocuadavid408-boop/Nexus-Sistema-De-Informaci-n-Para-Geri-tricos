@@ -11,7 +11,7 @@
     <a href="{{ url_for('agenda_residente', residente_id=residente['id']) }}" class="btn-volver">← Volver a la agenda</a>
     <h1 style="margin-top:10px;">➕ Crear en el itinerario</h1>
     <p class="page-subtitle">{{ residente['nombre'] }} — {{ residente['habitacion'] or 'Sin habitación' }}
-      · Alergias: <span style="color:#fca5a5;">{{ residente['alergias'] or 'Ninguna' }}</span></p>
+      · Alergias: <span class="txt-alerta">{{ residente['alergias'] or 'Ninguna' }}</span></p>
   </div>
 </div>
 

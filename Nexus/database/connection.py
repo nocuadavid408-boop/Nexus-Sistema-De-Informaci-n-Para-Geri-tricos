@@ -19,11 +19,6 @@ DB_CONFIG = dict(
     autocommit=False,
 )
 
-# Bases en la nube (Aiven, etc.) exigen SSL: apunta NEXUS_DB_SSL_CA al certificado CA.
-_ssl_ca = os.environ.get("NEXUS_DB_SSL_CA")
-if _ssl_ca:
-    DB_CONFIG["ssl_ca"] = _ssl_ca
-
 
 def get_db():
     try:

@@ -1,58 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Asignación de cuidadores{% endblock %}
 
-{% block head %}
-<style>
-  .asig-card { margin-bottom: 20px; }
-
-  .asig-top {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-
-  .asig-top .asig-info { flex: 1; min-width: 180px; }
-  .asig-top h2 { margin: 0 0 4px; font-size: 1.1rem; }
-  .asig-top p { margin: 0; font-size: 0.82rem; opacity: .7; }
-
-  .asig-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-    background: rgba(61,110,245,0.18);
-  }
-
-  .asig-lista {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .asig-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    cursor: pointer;
-  }
-
-  .asig-item:hover { background: rgba(61,110,245,0.08); }
-  .asig-item input { width: 18px; height: 18px; flex-shrink: 0; }
-  .asig-item small { display: block; opacity: .65; }
-
-  .asig-item.marcado { border-color: rgba(61,110,245,0.7); background: rgba(61,110,245,0.12); }
-
-  .asig-pie { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-</style>
-{% endblock %}
 
 {% block content %}
 

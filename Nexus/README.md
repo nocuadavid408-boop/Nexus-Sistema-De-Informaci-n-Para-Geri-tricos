@@ -78,7 +78,7 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
+Docuementacion Swagger: python -m database.schema
 
 ### 3. usuarios de prueba
 
@@ -159,21 +159,3 @@ Nexus/
 
 Equipo Nexus. 💙
 
-
-
-## Base de datos v3 (itinerario diario)
-
-1. Inicia MySQL/MariaDB (XAMPP) y crea todo con **una** de estas opciones:
-   - `python -m database.schema`, o
-   - importa `database/nexus_v3.sql` en phpMyAdmin.
-   ⚠️ Elimina las tablas viejas (`actividades` antigua, `medicamentos_residente`, `medicamento_horas`,
-   `catalogo_medicamentos`, `agenda_eventos`). Respalda antes si tienes datos.
-2. Usuarios de prueba: `admin / admin123`, `cuidador / cuidador123`, `familiar / familiar123`.
-3. Conexión por variables de entorno (valores por defecto de XAMPP): `NEXUS_DB_HOST`, `NEXUS_DB_PORT`,
-   `NEXUS_DB_USER`, `NEXUS_DB_PASSWORD`, `NEXUS_DB_NAME`.
-   Si la base no existe o falta una tabla, la app **no arranca** y el error dice qué hacer.
-
-Modelo: `categorias_medicamentos → medicamentos` y `categorias_actividades → actividades` (1:N).
-`itinerario_diario` guarda UNA fila por residente, día y medicamento/actividad, con las horas en JSON
-(`["06:00","12:00"]`); el ✓ de cada hora está en `itinerario_checks`; las observaciones generales del día
-en `itinerario_observaciones`.
