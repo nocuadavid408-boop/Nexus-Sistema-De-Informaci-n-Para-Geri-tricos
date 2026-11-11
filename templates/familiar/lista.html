@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Vista Familiar{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    {% if session.get('rol') == 'Familiar' %}
+    <h1>👨‍👩‍👧 Mis Adultos Mayores</h1>
+    <p class="page-subtitle">Información de los residentes vinculados a tu cuenta</p>
+    {% else %}
+    <h1>👨‍👩‍👧 Vista Familiar</h1>
+    <p class="page-subtitle">Así ven los familiares la información de sus residentes</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if residentes %}
+<div class="fl-buscador-wrap">
+  <input type="text" id="buscador" placeholder="🔍 Buscar residente..." class="fl-buscador">
+</div>
+
+<div class="fl-grid" id="fl-grid">
+  {% for r in residentes %}
+  <div class="fl-card" data-nombre="{{ r.nombre | lower }}">
+
+    <div class="fl-card-top">
+      <div class="fl-avatar">{{ r.nombre[0] | upper }}</div>
+      <div class="fl-card-info">
+        <p class="fl-nombre">{{ r.nombre }}</p>
+        <span class="fl-doc">📄 {{ r.documento }}</span>
+      </div>
+    </div>
+
+    <div class="fl-datos">
+      <div class="fl-dato">
+        <span class="fl-dato-label">Edad</span>
+        <span class="fl-dato-valor">{{ r.edad }} años</span>
+      </div>
+      <div class="fl-dato">
+        <span class="fl-dato-label">Habitación</span>
+        <span class="fl-dato-valor">🛏️ {{ r.habitacion or '—' }}</span>
+      </div>
+      <div class="fl-dato">
+        <span class="fl-dato-label">Familiar</span>
+        <span class="fl-dato-valor">{{ r.familiar_nombre or '—' }}</span>
+      </div>
+      <div class="fl-dato">
+        <span class="fl-dato-label">Parentesco</span>
+        <span class="fl-dato-valor">{{ r.familiar_parentesco or '—' }}</span>
+      </div>
+    </div>
+
+    <a href="{{ url_for('seguimiento_familiar', residente_id=r.id) }}" class="fl-btn">
+      👁️ Ver como familiar
+    </a>
+
+  </div>
+  {% endfor %}
+</div>
+
+<div id="fl-vacio" style="display:none;" class="fl-sin-resultados">
+  😕 No se encontró ningún residente.
+</div>
+
+<script>
+  document.getElementById('buscador').addEventListener('keyup', function () {
+    const texto = this.value.toLowerCase();
+    const tarjetas = document.querySelectorAll('.fl-card');
+    let visibles = 0;
+    tarjetas.forEach(card => {
+      const nombre = card.dataset.nombre;
+      if (nombre.includes(texto)) {
+        card.style.display = '';
+        visibles++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+    document.getElementById('fl-vacio').style.display = visibles === 0 ? 'block' : 'none';
+  });
+</script>
+
+{% else %}
+<div class="contenedor">
+  <div class="sf-vacio">
+    {% if session.get('rol') == 'Familiar' %}
+    😕 Aún no tienes ningún adulto mayor vinculado a tu cuenta.<br>
+    Pide al personal del hogar que registre a tu familiar usando tu mismo nombre
+    de usuario (<strong>{{ session.get('username') }}</strong>) en el campo
+    "Usuario del familiar".
+    {% else %}
+    😕 No hay residentes registrados aún.
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

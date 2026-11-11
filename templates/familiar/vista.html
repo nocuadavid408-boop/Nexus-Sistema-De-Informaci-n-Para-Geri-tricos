@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Seguimiento Familiar — {{ residente['nombre'] }}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('lista_familiar') }}" class="btn-volver">← Volver</a>
+    <h1 style="margin-top:10px;">👨‍👩‍👧 Seguimiento Familiar</h1>
+    <p class="page-subtitle">Vista de solo lectura — información del residente para su familiar</p>
+  </div>
+</div>
+
+<!-- TARJETAS SUPERIORES -->
+<div class="sf-top-grid">
+
+  <!-- Residente -->
+  <div class="contenedor">
+    <div class="seccion-form">
+      <h2>🧓 Residente</h2>
+      <div class="sf-perfil-top">
+        <div class="sf-avatar sf-avatar-blue">{{ residente['nombre'][0] | upper }}</div>
+        <div>
+          <p class="sf-nombre">{{ residente['nombre'] }}</p>
+          <span class="sf-doc-badge">📄 {{ residente['documento'] }}</span>
+        </div>
+      </div>
+      <div class="sf-meta-row">
+        <div class="sf-meta-item">
+          <span class="sf-meta-label">Edad</span>
+          <span class="sf-meta-valor">{{ residente['edad'] or '—' }} años</span>
+        </div>
+        <div class="sf-meta-item">
+          <span class="sf-meta-label">Habitación</span>
+          <span class="sf-meta-valor">🛏️ {{ residente['habitacion'] or '—' }}</span>
+        </div>
+        <div class="sf-meta-item">
+          <span class="sf-meta-label">Fecha de ingreso</span>
+          <span class="sf-meta-valor">📅 {{ residente['fecha_ingreso'] or '—' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Familiar -->
+  <div class="contenedor">
+    <div class="seccion-form">
+      <h2>📞 Familiar Responsable</h2>
+      <div class="sf-familiar-card">
+        <div class="sf-avatar sf-avatar-green">{{ residente['familiar_nombre'][0] | upper }}</div>
+        <div class="sf-familiar-datos">
+          <p class="sf-familiar-nombre">{{ residente['familiar_nombre'] }}</p>
+          <p class="sf-familiar-parentesco">{{ residente['familiar_parentesco'] }}</p>
+          <a href="tel:{{ residente['familiar_telefono'] }}" class="btn-secundario" style="margin-top:10px; display:inline-block; font-size:0.84rem;">
+            📱 {{ residente['familiar_telefono'] }}
+          </a>
+        </div>
+      </div>
+
+      <div class="grupo-input" style="margin-top:14px;">
+        <label>Diagnóstico</label>
+        <div class="sf-campo-lectura">{{ residente['diagnostico'] or 'No registrado' }}</div>
+      </div>
+
+      <div class="grupo-input" style="margin-top:10px;">
+        <label>Alergias</label>
+        <div class="sf-campo-lectura sf-campo-alerta">{{ residente['alergias'] or 'Sin alergias registradas' }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- HISTORIAL DE ACTIVIDADES -->
+<div class="contenedor" style="margin-bottom:18px;">
+  <div class="sf-tabla-header">
+    <p class="sf-tabla-titulo">📋 Actividades Programadas</p>
+    <span class="sf-readonly-badge">Solo lectura</span>
+  </div>
+
+  {% if actividades %}
+  <div class="table-responsive">
+    <table class="sf-tabla">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Actividad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in actividades %}
+        <tr>
+          <td>📅 {{ a['fecha'] or '—' }}</td>
+          <td><span class="sf-fecha-badge">🕐 {{ a['hora'] }}</span></td>
+          <td>{{ a['actividad'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="sf-vacio">📭 No hay actividades registradas aún.</div>
+  {% endif %}
+</div>
+
+<!-- MEDICAMENTOS -->
+<div class="contenedor" style="margin-bottom:24px;">
+  <div class="sf-tabla-header">
+    <p class="sf-tabla-titulo">💊 Medicamentos</p>
+    <span class="sf-readonly-badge">Solo lectura</span>
+  </div>
+  {% if medicamentos %}
+  <div class="table-responsive">
+    <table class="sf-tabla">
+      <thead>
+        <tr>
+          <th>Medicamento</th>
+          <th>Dosis</th>
+          <th>Día</th>
+          <th>Horario</th>
+          <th>Observaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in medicamentos %}
+        <tr>
+          <td>{{ m['nombre'] }}</td>
+          <td>{{ m['dosis'] }}</td>
+          <td>{{ m['dia'] | dias_txt }}</td>
+          <td>{% for h in m['horas'] %}<span class="sf-fecha-badge">🕐 {{ h }}</span> {% endfor %}</td>
+          <td>{{ m['observaciones'] or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="sf-vacio">📭 Sin medicamentos registrados aún.</div>
+  {% endif %}
+</div>
+
+
+{% endblock %}

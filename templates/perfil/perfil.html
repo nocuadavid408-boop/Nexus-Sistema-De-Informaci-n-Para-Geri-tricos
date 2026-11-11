@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Mi Perfil</h1>
+        <p class="page-subtitle">
+            Consulta tu información personal y cambia tu contraseña.
+        </p>
+    </div>
+</div>
+
+<div class="row">
+
+    <!-- INFORMACIÓN PERSONAL -->
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header">
+                <h4>Información personal</h4>
+            </div>
+
+            <div class="card-body">
+
+                <form method="post">
+
+                    <div class="mb-3">
+                        <label>Nombre completo</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="nombre"
+                            value="{{ usuario.nombre }}"
+                            required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Usuario</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ usuario.username }}"
+                            disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Correo</label>
+                        <input
+                            type="email"
+                            class="form-control"
+                            name="correo"
+                            value="{{ usuario.correo or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Rol</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ usuario.rol }}"
+                            disabled>
+                    </div>
+
+                    <button class="btn btn-primary">
+                        Guardar cambios
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CAMBIAR CONTRASEÑA -->
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header">
+                <h4>Cambiar contraseña</h4>
+            </div>
+
+            <div class="card-body">
+
+                <form action="{{ url_for('cambiar_password') }}" method="post">
+<div class="mb-3">
+    <label>Contraseña actual</label>
+
+    <div class="input-icon-wrap">
+        <input
+            type="password"
+            id="actual"
+            class="form-control"
+            name="actual"
+            required>
+
+        <button type="button"
+                class="toggle-password"
+                onclick="togglePassword('actual', this)">
+            <i class="bi bi-eye"></i>
+        </button>
+    </div>
+</div>
+
+                    <div class="mb-3">
+                        <label>Nueva contraseña</label>
+
+                        <div class="input-icon-wrap">
+                            <input
+                                type="password"
+                                id="nueva"
+                                class="form-control"
+                                name="nueva"
+                                required>
+
+                            <button type="button"
+                                    class="toggle-password"
+                                    onclick="togglePassword('nueva', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Confirmar contraseña</label>
+
+                        <div class="input-icon-wrap">
+                            <input
+                                type="password"
+                                id="confirmar"
+                                class="form-control"
+                                name="confirmar"
+                                required>
+
+                            <button type="button"
+                                    class="toggle-password"
+                                    onclick="togglePassword('confirmar', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary">
+                        Cambiar contraseña
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function togglePassword(id, button) {
+    const input = document.getElementById(id);
+    const icon = button.querySelector("i");
+
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+    }
+}
+</script>
+
+{% endblock %}
