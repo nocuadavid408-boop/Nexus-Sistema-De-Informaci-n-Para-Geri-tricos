@@ -6,7 +6,7 @@ medicamentos, seguimiento familiar, historial clínico/asistencial y
 notificaciones de alertas. Todo desde un solo panel, con roles de acceso
 diferenciados (Administrador, Cuidador, Familiar).
 
-Construido con **FastAPI** + **SQLite** + **Jinja2** + **Bootstrap 5**.
+Construido con **FastAPI** + **MariaDB/MySQL** + **Jinja2** + **Bootstrap 5**.
 
 ---
 
@@ -43,7 +43,7 @@ Desarrollo de Software** — SENA.
 
 - **FastAPI** — backend y enrutamiento
 - **Jinja2** — plantillas del lado del servidor
-- **SQLite** — base de datos
+- **MariaDB / MySQL** (PyMySQL) — base de datos
 - **Bootstrap 5.3** — estilos base
 - **Starlette SessionMiddleware** — sesiones de usuario
 
@@ -51,24 +51,20 @@ Desarrollo de Software** — SENA.
 
 ##  Instalación y ejecución
 
-La generación de PDF (`generar_pdf.js`) usa Node.js, así que también hay que instalar sus dependencias:
+Requisitos: Python 3.10+, MariaDB 10.4+ / MySQL 8 (por ejemplo XAMPP) y Node.js (solo para `generar_pdf.js`).
 
-```bash
-npm install
-```
-
-### 1. Crear y activar entorno virtual
+### 1. Crear y activar el entorno virtual
 
 **Windows**
 ```bash
-cd nexus
+cd Nexus
 python -m venv venv
 venv\Scripts\activate
 ```
 
 **Linux / Mac**
 ```bash
-cd nexus
+cd Nexus
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -77,10 +73,10 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+npm install
 ```
-Docuementacion Swagger: python -m database.schema
 
-### 3. usuarios de prueba
+### 3. Usuarios de prueba
 
 | Rol | Usuario | Contraseña |
 |---|---|---|
@@ -94,7 +90,8 @@ Docuementacion Swagger: python -m database.schema
 uvicorn main:app --reload
 ```
 
-Abre  `http://127.0.0.1:8000`
+- Aplicación: `http://localhost:8000/` (redirige al login o al panel según la sesión).
+- Documentación Swagger: `http://localhost:8000/docs` (única ruta de la documentación).
 
 ---
 
@@ -104,7 +101,6 @@ Abre  `http://127.0.0.1:8000`
 Nexus/
 ├── main.py                     # Creación de la app, middleware, lifespan, include_router
 ├── requirements.txt
-├── nexus.db
 ├── core/
 │   ├── config.py                # Rutas base, SECRET_KEY, roles, constantes
 │   ├── security.py               # Hash de contraseñas
@@ -113,7 +109,8 @@ Nexus/
 │   └── tasks.py                   # Tarea en segundo plano de notificaciones (RF05)
 ├── database/
 │   ├── connection.py             # get_db()
-│   └── schema.py                  # init_db(): creación de tablas + migraciones
+│   ├── schema.py                  # init_db(): ejecuta nexus_v3.sql
+│   └── nexus_v3.sql               # Esquema + datos iniciales (MariaDB/MySQL)
 ├── routers/
 │   ├── auth.py                    # /, /login, /registro, /logout
 │   ├── dashboard.py

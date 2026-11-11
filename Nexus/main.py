@@ -90,6 +90,7 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url=None,      # /docs se sirve abajo con la identidad de Nexus
     redoc_url=None,
+    openapi_url="/docs/openapi.json",   # el esquema también queda bajo /docs; la raíz no expone nada de la API
 )
 
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)

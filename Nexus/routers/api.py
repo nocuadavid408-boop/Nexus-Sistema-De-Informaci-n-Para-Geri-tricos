@@ -15,11 +15,13 @@ from typing import List, Optional
 
 import pymysql
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.acceso import ids_visibles, nombre_para_registro, puede_ver_residente
 from core.agenda import puede_editar_agenda, puede_ver_agenda
 from core.auth import cuidador_activo, sesion_operativa
+from core import residentes as core_residentes
 from core.config import STAFF_ROLES
 from core.itinerario import (
     TIPOS, categorias, detalle_entrada, dia, eliminar, fechas_validas, guardar,
@@ -64,6 +66,22 @@ class ResidenteOut(BaseModel):
     habitacion: Optional[str] = None
     diagnostico: Optional[str] = None
     alergias: Optional[str] = None
+
+
+class ResidenteIn(BaseModel):
+    nombre: str = Field(..., min_length=2, max_length=255, examples=["María Pérez"])
+    documento: str = Field(..., min_length=3, max_length=100, examples=["41234567"])
+    edad: Optional[int] = Field(None, ge=0, le=130, examples=[82])
+    fecha_ingreso: Optional[date] = Field(None, examples=["2026-01-15"])
+    habitacion: Optional[str] = Field(None, max_length=100, examples=["204"])
+    diagnostico: Optional[str] = Field(None, examples=["Hipertensión"])
+    medicamentos: Optional[str] = Field(None, examples=["Losartán 50 mg"])
+    alergias: Optional[str] = Field(None, examples=["Penicilina"])
+    familiar_nombre: Optional[str] = Field(None, max_length=255)
+    familiar_parentesco: Optional[str] = Field(None, max_length=100)
+    familiar_telefono: Optional[str] = Field(None, max_length=100)
+    familiar_username: Optional[str] = Field(
+        None, max_length=191, description="Usuario (rol Familiar) vinculado al residente.")
 
 
 class CategoriaOut(BaseModel):
@@ -235,10 +253,19 @@ def login(datos: LoginIn, request: Request, conn=Depends(_bd)):
     return UsuarioOut(id=u["id"], username=u["username"], nombre=u["nombre"], rol=u["rol"])
 
 
-@router.post("/auth/logout", tags=["Autenticación"], summary="Cerrar sesión")
+@router.post("/auth/logout", tags=["Autenticación"], summary="Cerrar sesión",
+             response_class=RedirectResponse, status_code=303)
 def logout(request: Request):
+    """Destruye la sesión y redirige a la pantalla de inicio de sesión (sin JSON)."""
     request.session.clear()
-    return {"ok": True}
+    return RedirectResponse("/login", status_code=303)
+
+
+@router.get("/auth/logout", include_in_schema=False, response_class=RedirectResponse,
+            status_code=303)
+def logout_get(request: Request):
+    request.session.clear()
+    return RedirectResponse("/login", status_code=303)
 
 
 @router.get("/auth/me", response_model=UsuarioOut, tags=["Autenticación"],
@@ -285,6 +312,79 @@ def detalle_residente(residente_id: int, session=Depends(api_user), conn=Depends
     if not fila:
         raise HTTPException(404, "Residente no encontrado.")
     return fila
+
+
+def _datos_residente(d: ResidenteIn) -> dict:
+    datos = d.model_dump()
+    datos["fecha_ingreso"] = d.fecha_ingreso.isoformat() if d.fecha_ingreso else None
+    for k, v in datos.items():
+        if isinstance(v, str):
+            datos[k] = v.strip() or None
+    return datos
+
+
+@router.post("/residentes", response_model=ResidenteOut, status_code=201, tags=["Residentes"],
+             summary="Registrar un residente (solo admin)",
+             responses={**R401, **R403,
+                        409: {"model": Error, "description": "El documento ya está registrado."}})
+def crear_residente(datos: ResidenteIn, session=Depends(api_admin), conn=Depends(_bd)):
+    """Inserta en `residentes` (MySQL) con la misma lógica que el formulario web."""
+    d = _datos_residente(datos)
+    if core_residentes.documento_en_uso(conn, d["documento"]):
+        raise HTTPException(409, "Ya existe un residente con ese número de documento.")
+    try:
+        nuevo = core_residentes.crear(conn, d)
+        conn.commit()
+    except pymysql.err.IntegrityError:
+        conn.rollback()
+        raise HTTPException(409, "Ya existe un residente con ese número de documento.")
+    except Exception:
+        conn.rollback()
+        raise
+    with conn.cursor() as c:
+        c.execute(f"SELECT {_COLS_RES} FROM residentes WHERE id=%s", (nuevo,))
+        return c.fetchone()
+
+
+@router.put("/residentes/{residente_id}", response_model=ResidenteOut, tags=["Residentes"],
+            summary="Actualizar un residente (solo admin)",
+            responses={**R401, **R403, **R404,
+                       409: {"model": Error, "description": "El documento ya está registrado."}})
+def actualizar_residente(residente_id: int, datos: ResidenteIn,
+                         session=Depends(api_admin), conn=Depends(_bd)):
+    d = _datos_residente(datos)
+    with conn.cursor() as c:
+        c.execute("SELECT 1 FROM residentes WHERE id=%s", (residente_id,))
+        if not c.fetchone():
+            raise HTTPException(404, "Residente no encontrado.")
+    if core_residentes.documento_en_uso(conn, d["documento"], excluir_id=residente_id):
+        raise HTTPException(409, "Ya existe otro residente con ese número de documento.")
+    try:
+        core_residentes.actualizar(conn, residente_id, d)
+        conn.commit()
+    except pymysql.err.IntegrityError:
+        conn.rollback()
+        raise HTTPException(409, "Ya existe otro residente con ese número de documento.")
+    except Exception:
+        conn.rollback()
+        raise
+    with conn.cursor() as c:
+        c.execute(f"SELECT {_COLS_RES} FROM residentes WHERE id=%s", (residente_id,))
+        return c.fetchone()
+
+
+@router.delete("/residentes/{residente_id}", response_model=EliminadoOut, tags=["Residentes"],
+               summary="Eliminar un residente (solo admin)", responses={**R401, **R403, **R404})
+def eliminar_residente(residente_id: int, session=Depends(api_admin), conn=Depends(_bd)):
+    try:
+        ok = core_residentes.eliminar(conn, residente_id)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    if not ok:
+        raise HTTPException(404, "Residente no encontrado.")
+    return EliminadoOut(eliminados=1)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -477,3 +577,10 @@ def eliminar_entrada(residente_id: int, itinerario_id: int, session=Depends(api_
     if not n:
         raise HTTPException(404, "No se encontró esa entrada (o es de un día anterior).")
     return EliminadoOut(eliminados=n)
+
+
+# Las rutas de la API llevan el prefijo "api_" en su nombre interno. Sin esto,
+# url_for("login") y url_for("logout") de las pantallas HTML resolvían a
+# /api/v1/auth/... (mismo nombre de función) y devolvían JSON en crudo.
+for _ruta in router.routes:
+    _ruta.name = f"api_{_ruta.name}"

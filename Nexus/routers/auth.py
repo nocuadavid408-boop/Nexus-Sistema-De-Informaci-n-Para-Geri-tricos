@@ -21,8 +21,9 @@ from database.connection import get_db
 router = APIRouter()
 
 
-@router.get("/", name="index")
+@router.get("/", name="index", include_in_schema=False)
 async def index(request: Request):
+    """Raíz: siempre la aplicación (dashboard o login). La documentación vive solo en /docs."""
     if "user_id" in request.session:
         return RedirectResponse(
             home_url_for(request, request.session.get("rol")),
@@ -193,8 +194,9 @@ async def registro_submit(request: Request):
     return RedirectResponse(request.url_for("login"), status_code=303)
 
 
-@router.get("/logout", name="logout")
+@router.api_route("/logout", methods=["GET", "POST"], name="logout")
 async def logout(request: Request):
+    """Destruye la sesión y redirige al login (nunca devuelve JSON)."""
     request.session.clear()
     flash(request, "Sesión cerrada correctamente.", "exito")
     return RedirectResponse(request.url_for("login"), status_code=303)
