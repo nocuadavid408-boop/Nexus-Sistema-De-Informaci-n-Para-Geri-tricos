@@ -76,7 +76,47 @@ pip install -r requirements.txt
 npm install
 ```
 
-### 3. Usuarios de prueba
+### 3. Configurar la base de datos (`nexus_v3.sql`)
+
+Sigue este orden exacto:
+
+1. **Inicia MariaDB/MySQL** (en XAMPP: *Start* en el módulo MySQL).
+2. **(Opcional) Variables de entorno** si tu servidor no usa los valores por defecto de XAMPP:
+
+   | Variable | Por defecto |
+   |---|---|
+   | `NEXUS_DB_HOST` | `127.0.0.1` |
+   | `NEXUS_DB_PORT` | `3306` |
+   | `NEXUS_DB_USER` | `root` |
+   | `NEXUS_DB_PASSWORD` | *(vacía)* |
+   | `NEXUS_DB_NAME` | `nexus_proyecto` |
+
+3. **Crea la base, las tablas y los datos iniciales** con **una** de estas opciones:
+
+   ```bash
+   # Opción A — con el script del proyecto (entorno virtual activo)
+   python -m database.schema
+
+   # Opción B — con el cliente de MySQL
+   mysql -u root < database/nexus_v3.sql
+   ```
+
+   Opción C: importar `database/nexus_v3.sql` desde phpMyAdmin (pestaña *Importar*).
+
+   > ⚠️ El script elimina las tablas antiguas (`actividades` anterior, `medicamentos_residente`,
+   > `medicamento_horas`, `catalogo_medicamentos`, `agenda_eventos`). Haz respaldo si tienes datos que conservar.
+
+4. **Verifica** que existan las tablas: `usuarios`, `residentes`, `personal`, `asignaciones`,
+   `categorias_medicamentos`, `medicamentos`, `categorias_actividades`, `actividades`,
+   `itinerario_diario`, `itinerario_checks`, `itinerario_observaciones`.
+   Si falta alguna, la aplicación **no arranca** y el error indica qué importar.
+
+Modelo: `categorias_medicamentos → medicamentos` y `categorias_actividades → actividades` (1:N).
+`itinerario_diario` guarda UNA fila por residente, día y medicamento/actividad, con las horas en JSON
+(`["06:00","12:00"]`); el ✓ de cada hora está en `itinerario_checks`; las observaciones generales del día
+en `itinerario_observaciones`.
+
+### 4. Usuarios de prueba
 
 | Rol | Usuario | Contraseña |
 |---|---|---|
@@ -84,7 +124,7 @@ npm install
 | Cuidador | `cuidador` | `cuidador123` |
 | Familiar | `familiar` | `familiar123` |
 
-### 4. Ejecutar el servidor
+### 5. Ejecutar el servidor
 
 ```bash
 uvicorn main:app --reload
@@ -156,3 +196,11 @@ Nexus/
 
 Equipo Nexus. 💙
 
+
+
+## API y documentación (Swagger)
+
+Con el servidor activo abre `http://localhost:8000/docs` (el esquema JSON está en `/docs/openapi.json`). Inicia sesión con `POST /api/v1/auth/login`
+(`admin` / `admin123`) y prueba el resto con **Try it out**: lo que registres (por ejemplo
+`POST /api/v1/residentes` o `POST /api/v1/residentes/{id}/medicamentos`) se guarda en MariaDB/MySQL y aparece en la agenda, el panel y el historial.
+El esquema se genera en vivo desde `routers/api.py`.
