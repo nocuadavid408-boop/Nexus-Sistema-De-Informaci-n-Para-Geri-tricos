@@ -6,7 +6,7 @@ medicamentos, seguimiento familiar, historial clínico/asistencial y
 notificaciones de alertas. Todo desde un solo panel, con roles de acceso
 diferenciados (Administrador, Cuidador, Familiar).
 
-Construido con **FastAPI** + **SQLite** + **Jinja2** + **Bootstrap 5**.
+Construido con **FastAPI** + **MariaDB/MySQL** + **Jinja2** + **Bootstrap 5**.
 
 ---
 
@@ -43,7 +43,7 @@ Desarrollo de Software** — SENA.
 
 - **FastAPI** — backend y enrutamiento
 - **Jinja2** — plantillas del lado del servidor
-- **SQLite** — base de datos
+- **MariaDB / MySQL** (PyMySQL) — base de datos
 - **Bootstrap 5.3** — estilos base
 - **Starlette SessionMiddleware** — sesiones de usuario
 
@@ -51,24 +51,20 @@ Desarrollo de Software** — SENA.
 
 ##  Instalación y ejecución
 
-La generación de PDF (`generar_pdf.js`) usa Node.js, así que también hay que instalar sus dependencias:
+Requisitos: Python 3.10+, MariaDB 10.4+ / MySQL 8 (por ejemplo XAMPP) y Node.js (solo para `generar_pdf.js`).
 
-```bash
-npm install
-```
-
-### 1. Crear y activar entorno virtual
+### 1. Crear y activar el entorno virtual
 
 **Windows**
 ```bash
-cd nexus
+cd Nexus
 python -m venv venv
 venv\Scripts\activate
 ```
 
 **Linux / Mac**
 ```bash
-cd nexus
+cd Nexus
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -77,10 +73,50 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+npm install
 ```
-Docuementacion Swagger: python -m database.schema
 
-### 3. usuarios de prueba
+### 3. Configurar la base de datos (`nexus_v3.sql`)
+
+Sigue este orden exacto:
+
+1. **Inicia MariaDB/MySQL** (en XAMPP: *Start* en el módulo MySQL).
+2. **(Opcional) Variables de entorno** si tu servidor no usa los valores por defecto de XAMPP:
+
+   | Variable | Por defecto |
+   |---|---|
+   | `NEXUS_DB_HOST` | `127.0.0.1` |
+   | `NEXUS_DB_PORT` | `3306` |
+   | `NEXUS_DB_USER` | `root` |
+   | `NEXUS_DB_PASSWORD` | *(vacía)* |
+   | `NEXUS_DB_NAME` | `nexus_proyecto` |
+
+3. **Crea la base, las tablas y los datos iniciales** con **una** de estas opciones:
+
+   ```bash
+   # Opción A — con el script del proyecto (entorno virtual activo)
+   python -m database.schema
+
+   # Opción B — con el cliente de MySQL
+   mysql -u root < database/nexus_v3.sql
+   ```
+
+   Opción C: importar `database/nexus_v3.sql` desde phpMyAdmin (pestaña *Importar*).
+
+   > ⚠️ El script elimina las tablas antiguas (`actividades` anterior, `medicamentos_residente`,
+   > `medicamento_horas`, `catalogo_medicamentos`, `agenda_eventos`). Haz respaldo si tienes datos que conservar.
+
+4. **Verifica** que existan las tablas: `usuarios`, `residentes`, `personal`, `asignaciones`,
+   `categorias_medicamentos`, `medicamentos`, `categorias_actividades`, `actividades`,
+   `itinerario_diario`, `itinerario_checks`, `itinerario_observaciones`.
+   Si falta alguna, la aplicación **no arranca** y el error indica qué importar.
+
+Modelo: `categorias_medicamentos → medicamentos` y `categorias_actividades → actividades` (1:N).
+`itinerario_diario` guarda UNA fila por residente, día y medicamento/actividad, con las horas en JSON
+(`["06:00","12:00"]`); el ✓ de cada hora está en `itinerario_checks`; las observaciones generales del día
+en `itinerario_observaciones`.
+
+### 4. Usuarios de prueba
 
 | Rol | Usuario | Contraseña |
 |---|---|---|
@@ -88,13 +124,14 @@ Docuementacion Swagger: python -m database.schema
 | Cuidador | `cuidador` | `cuidador123` |
 | Familiar | `familiar` | `familiar123` |
 
-### 4. Ejecutar el servidor
+### 5. Ejecutar el servidor
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Abre  `http://127.0.0.1:8000`
+- Aplicación: `http://localhost:8000/` (redirige al login o al panel según la sesión).
+- Documentación Swagger: `http://localhost:8000/docs` (única ruta de la documentación).
 
 ---
 
@@ -104,7 +141,6 @@ Abre  `http://127.0.0.1:8000`
 Nexus/
 ├── main.py                     # Creación de la app, middleware, lifespan, include_router
 ├── requirements.txt
-├── nexus.db
 ├── core/
 │   ├── config.py                # Rutas base, SECRET_KEY, roles, constantes
 │   ├── security.py               # Hash de contraseñas
@@ -113,7 +149,8 @@ Nexus/
 │   └── tasks.py                   # Tarea en segundo plano de notificaciones (RF05)
 ├── database/
 │   ├── connection.py             # get_db()
-│   └── schema.py                  # init_db(): creación de tablas + migraciones
+│   ├── schema.py                  # init_db(): ejecuta nexus_v3.sql
+│   └── nexus_v3.sql               # Esquema + datos iniciales (MariaDB/MySQL)
 ├── routers/
 │   ├── auth.py                    # /, /login, /registro, /logout
 │   ├── dashboard.py
@@ -159,3 +196,11 @@ Nexus/
 
 Equipo Nexus. 💙
 
+
+
+## API y documentación (Swagger)
+
+Con el servidor activo abre `http://localhost:8000/docs` (el esquema JSON está en `/docs/openapi.json`). Inicia sesión con `POST /api/v1/auth/login`
+(`admin` / `admin123`) y prueba el resto con **Try it out**: lo que registres (por ejemplo
+`POST /api/v1/residentes` o `POST /api/v1/residentes/{id}/medicamentos`) se guarda en MariaDB/MySQL y aparece en la agenda, el panel y el historial.
+El esquema se genera en vivo desde `routers/api.py`.
