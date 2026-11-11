@@ -4,6 +4,9 @@
 -- Uso:  mysql -u root < nexus_v3.sql      (o importarlo en phpMyAdmin)
 -- Si ya tienes datos que quieras conservar, haz respaldo antes.
 -- =====================================================================
+CREATE DATABASE IF NOT EXISTS nexus_proyecto
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE nexus_proyecto;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 

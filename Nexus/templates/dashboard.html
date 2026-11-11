@@ -12,7 +12,7 @@
 
 <div class="row g-3 mb-4">
 
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-6 col-lg-3">
     <div class="stat-card">
       <div class="stat-icon">👥</div>
       <div class="stat-number">{{ total_residentes }}</div>
@@ -20,7 +20,7 @@
     </div>
   </div>
 
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-6 col-lg-3">
     <div class="stat-card">
       <div class="stat-icon">📅</div>
       <div class="stat-number">{{ total_actividades }}</div>
@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-6 col-lg-3">
     <div class="stat-card">
       <div class="stat-icon">🔔</div>
       <div class="stat-number">{{ total_notificaciones_pendientes }}</div>
@@ -36,16 +36,16 @@
     </div>
   </div>
 
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-6 col-lg-3">
     <div class="stat-card">
       <div class="stat-icon">🔐</div>
-      <div class="stat-number" style="font-size:1.4rem;padding-top:10px">{{ session.rol }}</div>
+      <div class="stat-number" style="font-size:1.3rem">{{ session.rol }}</div>
       <div class="stat-label">Tu rol en el sistema</div>
     </div>
   </div>
 
   {% if session.rol == 'Administrador' %}
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-6 col-lg-3">
     <div class="stat-card">
       <div class="stat-icon">🧑‍💼</div>
       <div class="stat-number">{{ total_usuarios }}</div>
@@ -142,20 +142,6 @@
       </a>
     </div>
     {% endif %}
-
-    <div class="col-6 col-md-4 col-lg-3">
-  <a href="{{ url_for('perfil') }}" class="action-card">
-    <span class="action-icon">👤</span>
-    <span class="action-label">Mi perfil</span>
-  </a>
-</div>
-
-    <div class="col-6 col-md-4 col-lg-3">
-      <a href="{{ url_for('logout') }}" class="action-card" style="border-color:rgba(239,68,68,0.15)">
-        <span class="action-icon">🚪</span>
-        <span class="action-label" style="color:#f87171">Cerrar sesión</span>
-      </a>
-    </div>
 
   </div>
 </div>

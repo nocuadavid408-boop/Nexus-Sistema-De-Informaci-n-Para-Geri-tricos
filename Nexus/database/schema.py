@@ -15,7 +15,7 @@ import re
 
 import pymysql
 
-from database.connection import DB_CONFIG, comprobar_esquema, get_db
+from database.connection import DB_CONFIG, get_db
 
 SQL_FILE = os.path.join(os.path.dirname(__file__), "nexus_v3.sql")
 
@@ -26,21 +26,9 @@ def _sentencias(texto: str):
 
 
 def init_db() -> None:
-    """Ejecuta nexus_v3.sql. Si la base no existe (XAMPP local) la crea; en la nube
-    la base ya viene creada por el proveedor y se usa tal cual."""
-    try:
-        conn = pymysql.connect(**DB_CONFIG)
-    except pymysql.err.OperationalError as e:
-        if not e.args or e.args[0] != 1049:
-            raise
-        cfg = {k: v for k, v in DB_CONFIG.items() if k != "database"}
-        conn = pymysql.connect(**cfg)
-        with conn.cursor() as c:
-            c.execute(
-                f"CREATE DATABASE IF NOT EXISTS `{DB_CONFIG['database']}` "
-                "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci"
-            )
-            c.execute(f"USE `{DB_CONFIG['database']}`")
+    """Ejecuta nexus_v3.sql con una conexión que todavía no exige que la base exista."""
+    cfg = {k: v for k, v in DB_CONFIG.items() if k != "database"}
+    conn = pymysql.connect(**cfg)
     try:
         with open(SQL_FILE, encoding="utf-8") as f, conn.cursor() as c:
             for sentencia in _sentencias(f.read()):
@@ -49,15 +37,6 @@ def init_db() -> None:
     finally:
         conn.close()
     sincronizar_personal()
-
-
-def inicializar_si_falta() -> None:
-    """Primer arranque: si faltan tablas, importa nexus_v3.sql automáticamente.
-    Con las tablas ya creadas no toca nada (no se pierden datos al redesplegar)."""
-    try:
-        comprobar_esquema()
-    except RuntimeError:
-        init_db()
 
 
 def sincronizar_personal() -> None:
