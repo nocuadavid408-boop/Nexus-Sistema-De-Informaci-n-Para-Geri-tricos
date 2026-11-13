@@ -14,7 +14,8 @@ DB_CONFIG = dict(
     password=os.environ.get("NEXUS_DB_PASSWORD", ""),
     database=os.environ.get("NEXUS_DB_NAME", "nexus_proyecto"),
     charset="utf8mb4",
-    connect_timeout=5,
+    connect_timeout=10,
+    init_command="SET time_zone = '-05:00'",   # hora de Colombia en NOW()/CURRENT_TIMESTAMP
     cursorclass=DictCursor,
     autocommit=False,
 )
